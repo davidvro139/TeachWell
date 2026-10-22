@@ -1,0 +1,175 @@
+.collapsible-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  color: #204e41;
+  cursor: pointer;
+}
+.collapsible-icon {
+  display: flex;
+  padding-top: 3px;
+}
+.collapsible-titles {
+  flex: 1;
+  min-width: 0;
+}
+.collapsible-titles h2 {
+  margin: 0;
+}
+.collapsible-meta {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #5c6b65;
+}
+.collapsible-toggle {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #204e41;
+  border: 1px solid #c9d6cf;
+}
+.collapsible-toggle svg {
+  transition: transform 0.15s ease;
+}
+.is-collapsed .collapsible-toggle svg {
+  transform: rotate(-90deg);
+}
+.collapsible-body {
+  margin-top: 12px;
+}
+.collapsible-description {
+  font-size: 14px;
+  margin-top: 0;
+}
+.is-collapsed {
+  padding-bottom: 18px;
+}
+
+/* Course content: modules and items */
+.content-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.content-toolbar input {
+  margin: 0;
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+.content-toolbar button {
+  width: auto;
+}
+.module-block {
+  border: 1px solid #dfe6dc;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: white;
+}
+.module-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+.module-head .module-title {
+  margin: 4px 0 2px;
+  font-size: 17px;
+  color: #204e41;
+}
+.module-head .fine {
+  margin: 0;
+}
+/* Only the item's own title; headings inside formatted content keep their normal layout. */
+.item-row > h4 {
+  display: inline;
+  font-size: 15px;
+  margin: 0 8px 0 0;
+}
+.module-items {
+  padding: 0 16px 8px;
+}
+.item-row {
+  border-top: 1px solid #eef2ec;
+  padding: 10px 0;
+}
+.item-row .eyebrow {
+  margin-right: 8px;
+}
+.item-row p {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.item-text summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #204e41;
+  margin-top: 6px;
+}
+.item-text p {
+  white-space: pre-line;
+}
+
+/* Long name lists (unmapped assignments) */
+.name-list {
+  columns: 2 260px;
+  column-gap: 28px;
+  padding-left: 18px;
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+.name-list li {
+  break-inside: avoid;
+  margin-bottom: 4px;
+}
+.name-list-filter {
+  max-width: 360px;
+  margin: 8px 0 0;
+}
+
+/* Overrides for the older course-page rules (.elements article, .element) that predate collapsible modules. */
+.collapsible.panel {
+  margin-top: 28px;
+}
+.elements article.module-block {
+  padding: 0;
+  margin-bottom: 10px;
+}
+.element.item-row {
+  margin-top: 0;
+  padding: 10px 0;
+}
+.element.item-row p {
+  white-space: pre-line;
+}
+.ungrouped-content {
+  margin-top: 18px;
+}
+/* Canvas module text headers: section labels between items. */
+.module-text-header {
+  margin: 14px 0 2px;
+  padding-top: 10px;
+  border-top: 1px solid #dfe6dc;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5c6b65;
+}
+/* The plain-text rules above preserve line breaks; formatted content uses normal HTML whitespace. */
+.element.item-row .page-preview p,
+.element.item-row .page-preview li {
+  white-space: normal;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.element.item-row .page-preview li {
+  margin: 0 0 4px;
+}

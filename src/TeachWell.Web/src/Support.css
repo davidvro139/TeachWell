@@ -1,0 +1,27 @@
+.support-tabs {
+  margin-bottom: 10px;
+}
+.article-body {
+  white-space: pre-wrap;
+}
+.tag-list .tag {
+  margin-right: 6px;
+}
+.registrant-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #63716b;
+}
+.registrant-list li {
+  padding: 2px 0;
+}
+.workshop-list li {
+  align-items: flex-start;
+}
+@media (max-width: 720px) {
+  .support-tabs {
+    flex-wrap: wrap;
+  }
+}

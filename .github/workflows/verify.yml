@@ -1,0 +1,22 @@
+name: Verify foundation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/TeachWell.Web/package-lock.json
+      - run: dotnet restore TeachWell.sln
+      - run: dotnet build TeachWell.sln --no-restore
+      - run: dotnet test TeachWell.sln --no-build
+      - run: npm ci && npm run build
+        working-directory: src/TeachWell.Web

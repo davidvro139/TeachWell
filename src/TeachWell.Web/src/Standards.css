@@ -1,0 +1,134 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.standards-notes,
+.standards-preview label,
+.check-setting fieldset > label {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  font-weight: 600;
+}
+.standards-notes textarea,
+.check-setting textarea,
+.check-setting input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-weight: 400;
+}
+.standards-preview .form-row {
+  align-items: end;
+}
+.standards-aspect h3 {
+  margin-top: 0;
+  color: #204e41;
+}
+.check-setting {
+  border-top: 1px solid #dfe6dc;
+  padding: 10px 0;
+}
+.check-setting summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  cursor: pointer;
+}
+.check-setting summary .check-name {
+  font-weight: 600;
+}
+.check-setting fieldset {
+  border: 0;
+  padding: 8px 0 0;
+  margin: 0;
+  min-width: 0;
+}
+.check-off .check-name {
+  color: #66746f;
+  text-decoration: line-through;
+}
+.preview-result {
+  margin-top: 12px;
+}
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+.preview-table th,
+.preview-table td {
+  border-bottom: 1px solid #dfe6dc;
+  padding: 6px 8px;
+  text-align: left;
+}
+.preview-table td {
+  font-variant-numeric: tabular-nums;
+  width: 7em;
+}
+.course-standards dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 8px 0;
+}
+.course-standards dt {
+  font-weight: 600;
+}
+.course-standards dd {
+  margin: 0;
+}
+.course-standards form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.course-standards form label {
+  display: grid;
+  gap: 6px;
+}
+.finding-guidance {
+  margin-top: 8px;
+}
+.finding-guidance summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #204e41;
+}
+.finding-guidance p {
+  margin: 6px 0;
+}
+@media (max-width: 640px) {
+  .course-standards dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+.standards-endorsement {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #dfe6dc;
+  border-radius: 8px;
+}
+.standards-endorsement legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+.standards-endorsement label {
+  display: grid;
+  gap: 4px;
+  max-width: 420px;
+}
+.standards-endorsement .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

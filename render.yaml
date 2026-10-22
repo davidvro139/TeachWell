@@ -1,0 +1,42 @@
+# Render Blueprint for the public TeachWell demo: one Docker web service and one PostgreSQL database, both on the free plan.
+# Deploy: Render Dashboard → New → Blueprint → connect this repository. No secrets are needed; the demo signs visitors in with
+# one click to fictional personas and rebuilds its database from the fictional seed at startup and every 24 hours.
+# Free-plan limits: the service sleeps after 15 idle minutes (the next visit waits about a minute and gets freshly reset
+# data), and Render's free PostgreSQL expires 30 days after creation unless upgraded.
+services:
+  - type: web
+    name: teachwell-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # The image's ASP.NET Core server listens on 8080; tell Render to route there.
+      - key: PORT
+        value: "8080"
+      - key: Features__PublicDemo
+        value: "true"
+      - key: PublicDemo__ResetHours
+        value: "24"
+      # appsettings.json only accepts requests addressed to localhost. Render's router forwards only this service's own
+      # domains (and its health checks), and TeachWell never builds links from the Host header, so accept any host here.
+      - key: AllowedHosts
+        value: "*"
+      # Render terminates TLS in front of the service; trust its forwarded client address and scheme.
+      - key: ForwardedHeaders__Enabled
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: teachwell-demo-db
+          property: connectionString
+
+databases:
+  - name: teachwell-demo-db
+    plan: free
+    databaseName: teachwell
+    user: teachwell
+    # Reachable only from services in this Render account.
+    ipAllowList: []

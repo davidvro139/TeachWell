@@ -1,0 +1,165 @@
+/* The instructor's Start here checklist, the "How TeachWell fits together" explainer, and the course page header (ADR 016). */
+.start-here {
+  margin-bottom: 28px;
+  border-color: #c9dbc3;
+}
+.start-here-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.start-here-head h2 {
+  margin: 6px 0 4px;
+}
+.start-here-head .fine {
+  margin: 0;
+}
+.start-here .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.start-here-steps {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.start-here-steps li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid #e1e7df;
+  border-radius: 9px;
+  background: #fff;
+}
+.start-here-steps li.is-current {
+  border-color: #7fa98d;
+  background: #f4f8f2;
+  box-shadow: inset 4px 0 0 #2f6b4c;
+}
+.start-here-steps li.is-done {
+  background: #fafbf9;
+}
+.start-here-steps li.is-done h3 {
+  color: #5b6b58;
+}
+.start-here-mark {
+  color: #a6b4a7;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.is-done .start-here-mark {
+  color: #2f6b45;
+}
+.is-current .start-here-mark {
+  color: #2f6b4c;
+}
+.start-here-steps h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+.start-here-steps p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.start-here-steps li:not(.is-current) p {
+  margin-bottom: 0;
+}
+.start-here-foot {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+.start-here-foot .link-button,
+.start-here-restore .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.start-here-restore {
+  margin: 0 0 20px;
+  font-size: 13px;
+}
+.how-it-works {
+  margin-top: 28px;
+}
+.how-it-works h2 {
+  margin: 6px 0 16px;
+}
+.how-it-works-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.how-it-works-list li {
+  padding: 14px;
+  border: 1px solid #e1e7df;
+  border-radius: 9px;
+  background: #fff;
+}
+.how-it-works-list h3 {
+  font-size: 15px;
+  margin: 0 0 2px;
+}
+.how-it-works-list p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+.how-it-works-list .how-when {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6f7d73;
+  margin-bottom: 8px;
+}
+.course-header {
+  margin-bottom: 22px;
+}
+.course-header .intro {
+  margin-bottom: 14px;
+}
+.course-sections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: 13px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+}
+.course-sections > span {
+  color: #6f7d73;
+}
+.guide-reference {
+  font-size: 12px;
+  color: #6f7d73;
+  margin-top: -4px;
+}
+.export-steps {
+  margin: 0 0 8px;
+  padding-left: 22px;
+  line-height: 1.75;
+  font-size: 14px;
+}
+.export-help {
+  margin: 0 0 22px;
+}

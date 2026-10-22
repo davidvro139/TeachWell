@@ -1,0 +1,193 @@
+.course-tasks {
+  margin-top: 25px;
+}
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.task-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid #e3e8df;
+}
+.task-list strong,
+.task-list small {
+  display: block;
+  margin-top: 6px;
+}
+.task-list small {
+  color: #63716b;
+}
+.task-filter {
+  display: inline-grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #33463f;
+  margin-bottom: 20px;
+}
+.task-filter select {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid #ccd6cb;
+  border-radius: 6px;
+  background: #fff;
+}
+.task-workspace .panel {
+  margin-bottom: 25px;
+}
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.status-draft,
+.status-needsrevision {
+  background: #eef2e8;
+  color: #526844;
+}
+.status-inprogress,
+.status-changesrequested {
+  background: #fdf0d8;
+  color: #7a5426;
+}
+.status-readyforreview {
+  background: #e3ecf5;
+  color: #2f4f6e;
+}
+.status-blocked {
+  background: #fbe3dc;
+  color: #8d3326;
+}
+.status-resolved {
+  background: #dcecdf;
+  color: #1e5a33;
+}
+.status-withdrawn,
+.status-notapplicable {
+  background: #ece9e4;
+  color: #6b6459;
+}
+.reason-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e3e8df;
+}
+.reason-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.reason-form textarea,
+.task-workspace textarea,
+.task-workspace input:not([type="checkbox"]):not([type="radio"]) {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid #ccd6cb;
+  border-radius: 6px;
+  width: 100%;
+}
+.task-workspace label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #33463f;
+  margin: 14px 0;
+}
+.metadata-changes {
+  font-size: 13px;
+  color: #7a5426;
+  background: #fff7e8;
+  border-radius: 6px;
+  padding: 10px 10px 10px 26px;
+  margin-bottom: 14px;
+}
+.text-diff {
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  border: 1px solid #e3e8df;
+  border-radius: 6px;
+  overflow: auto;
+  max-height: 360px;
+}
+.text-diff > div {
+  padding: 1px 12px;
+}
+.diff-same {
+  color: #4a5a52;
+}
+.diff-added {
+  background: #e4f3e6;
+  color: #1e5a33;
+}
+.diff-removed {
+  background: #fbe9e5;
+  color: #8d3326;
+  text-decoration: line-through;
+}
+.comment-list,
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.comment-list li {
+  border-top: 1px solid #e3e8df;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.comment-list small {
+  color: #63716b;
+  margin-left: 8px;
+}
+.event-list li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #e3e8df;
+}
+.event-list svg {
+  margin-top: 4px;
+  flex-shrink: 0;
+  color: #657f72;
+}
+.event-list small {
+  color: #63716b;
+}
+.create-task-panel {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e3e8df;
+}
+.finding-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.finding-checklist li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+}
+.finding-checklist input {
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .task-list li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

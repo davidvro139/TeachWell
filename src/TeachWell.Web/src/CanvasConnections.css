@@ -1,0 +1,143 @@
+.canvas-form {
+  max-width: 760px;
+  margin: 25px 0 35px;
+}
+.canvas-form select {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 10px 0 22px;
+  padding: 12px;
+}
+.canvas-form .fine {
+  margin: -9px 0 22px;
+  font-size: 12px;
+}
+.canvas-form button + .fine {
+  margin: 15px 0 0;
+}
+.canvas-list-title {
+  margin-top: 35px;
+}
+.canvas-list {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 20px;
+}
+.connection-heading {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.connection-heading h3 {
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.canvas-list dl {
+  font-size: 12px;
+}
+.canvas-list dl div {
+  margin: 14px 0;
+}
+.canvas-list dt {
+  font-weight: 600;
+}
+.canvas-list dd {
+  margin: 5px 0;
+  color: #63716b;
+}
+.connection-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+.connection-actions button {
+  font-size: 12px;
+}
+.connection-warning {
+  color: #8b4231;
+  font-size: 12px;
+}
+.workspace-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+.workspace-tabs button {
+  font-size: 12px;
+  background: white;
+  border: 1px solid #d9e2d4;
+  color: #315b44;
+}
+.workspace-tabs button[aria-current="page"] {
+  background: #eaf0e8;
+}
+.canvas-import {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #dfe5dc;
+}
+.canvas-import h4 {
+  margin: 0 0 10px;
+}
+.canvas-import p {
+  font-size: 12px;
+}
+.import-options {
+  padding: 0;
+  list-style: none;
+}
+.import-options li {
+  display: flex;
+  gap: 15px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid #e1e7df;
+}
+.import-options strong,
+.import-options small {
+  display: block;
+  font-size: 13px;
+}
+.import-options small {
+  color: #63716b;
+  margin-top: 5px;
+}
+.import-options button {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.import-warnings {
+  border: 1px solid #d9c3a5;
+  background: #fff8eb;
+  border-radius: 8px;
+  padding: 22px;
+  margin-bottom: 25px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.source-link {
+  display: inline-block;
+  color: #285640;
+  text-decoration: underline;
+  font-size: 12px;
+  margin: 8px 0;
+}
+.item-status {
+  margin-left: 12px;
+}
+.elements article + article,
+.ungrouped-content {
+  margin-top: 25px;
+}
+@media (max-width: 720px) {
+  .import-options li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

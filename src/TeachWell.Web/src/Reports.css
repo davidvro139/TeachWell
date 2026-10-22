@@ -1,0 +1,202 @@
+.course-reports {
+  margin-top: 25px;
+}
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 14px 0;
+}
+.report-grid > div {
+  background: #f7f8f5;
+  border: 1px solid #e3e8df;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.report-grid dt {
+  font-size: 12px;
+  color: #63716b;
+  margin: 0;
+}
+.report-grid dd {
+  margin: 4px 0;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  color: #204e41;
+}
+.report-details {
+  margin: 14px 0;
+}
+.report-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #204e41;
+}
+.report-details .finding-checklist li {
+  gap: 8px;
+  align-items: center;
+}
+.competency-list small {
+  display: block;
+  margin-top: 6px;
+}
+.competency-list .finding-actions {
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.competency-list select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid #ccd6cb;
+  border-radius: 6px;
+}
+a.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* Paste learning outcomes: one editable row per proposed competency. */
+.outcome-import label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.outcome-import textarea,
+.outcome-import input:not([type="checkbox"]) {
+  margin: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+.outcome-rows {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: grid;
+  gap: 10px;
+}
+.outcome-rows li {
+  display: grid;
+  grid-template-columns: auto 110px 1fr;
+  gap: 8px 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #dfe6dc;
+  border-radius: 8px;
+  background: #fff;
+}
+.outcome-rows li.is-skipped {
+  opacity: 0.55;
+}
+.outcome-rows .outcome-include {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 20px;
+}
+.outcome-rows .outcome-description,
+.outcome-rows .outcome-notes {
+  grid-column: 2 / -1;
+}
+.outcome-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+}
+@media (max-width: 640px) {
+  .outcome-rows li {
+    grid-template-columns: 1fr;
+  }
+  .outcome-rows .outcome-description,
+  .outcome-rows .outcome-notes {
+    grid-column: auto;
+  }
+}
+.mapping-legend {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.mapping-scroll {
+  overflow: auto;
+  max-height: 70vh;
+  margin: 10px 0;
+  border: 1px solid #dfe6dc;
+  border-radius: 8px;
+  background: #fff;
+}
+.mapping-grid table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 14px;
+}
+.mapping-grid th,
+.mapping-grid td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #edf1eb;
+  text-align: center;
+  background: #fff;
+}
+.mapping-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+  background: #f4f7f2;
+}
+.mapping-grid thead th small,
+.mapping-grid th small {
+  display: block;
+  font-weight: 400;
+  color: #5b6b58;
+}
+.mapping-grid th[scope="row"],
+.mapping-grid th[scope="rowgroup"],
+.mapping-grid thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  min-width: 220px;
+  max-width: 360px;
+}
+.mapping-grid thead th:first-child {
+  z-index: 3;
+}
+.mapping-grid th[scope="row"] {
+  font-weight: 400;
+}
+.mapping-grid th[scope="row"] small {
+  display: inline;
+  margin-left: 4px;
+}
+.mapping-grid .mapping-module th,
+.mapping-grid .mapping-module td {
+  background: #f4f7f2;
+  font-weight: 600;
+}
+.mapping-grid th[scope="rowgroup"] small {
+  display: inline;
+}
+.mapping-grid td.is-changed {
+  background: #fff6d6;
+}
+.mapping-grid input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 640px) {
+  .mapping-grid th[scope="row"],
+  .mapping-grid th[scope="rowgroup"],
+  .mapping-grid thead th:first-child {
+    min-width: 150px;
+  }
+}
