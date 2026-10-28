@@ -179,7 +179,7 @@ The list is a recognition aid, not a gate. An unrecognised embed is still record
 
 ### Still deferred
 
-- **UDL multiple means.** Now unblocked for page-level evidence, but a module-level modality check also needs media counts in `CourseStructureEvidence`, which is a separate evidence version.
+- ~~**UDL multiple means.**~~ **Built October 28, 2026 — see the amendment below.**
 - **Widening the media-host list.** It covers the common providers and will miss self-hosted or niche ones, which then read as `Tool`. The limitation keeps those visible rather than silent, and the list is the right thing to extend as real courses turn up hosts it does not know.
 - **A transcript check.** A transcript beside a video is as good as captions for some needs, and detecting "a link near the player whose text mentions transcript" would reduce false confirmations. Not attempted: proximity in a flattened text snapshot is not reliable enough to act on yet.
 
@@ -209,3 +209,30 @@ Closing that gap properly would mean recording per-criterion coverage on `Course
   - a course never checked contributes nothing rather than counting as clean, asserted with zero guide records in the database
 - **One existing test changed.** `OversightTests.Oversight_filters_by_program_and_exports_safe_csv` asserted the filtered export had exactly two lines. That assertion's real intent was "only one course row in a filtered export", so it now asserts the course row is followed immediately by the rollup's own header, and that there is one row per criterion — intent preserved, and no longer coupled to a total the caveats can change.
 - **Not verified: the SPA.** The rollup table added to `Oversight.tsx` has not been type-checked or seen in a browser, for the usual reason (no Node here).
+
+
+## Amendment: modules that offer only media — October 28, 2026
+
+The last deferred item from roadmap item 5. Course-structure evidence is now **version 4**: each content item carries the number of recognised video and audio players in it, counted from the page evidence the media amendment above already captures. `Media` is nullable, so a snapshot from before version 4 reports a limitation rather than being read as zero. No migration — the structure evidence is JSON.
+
+`MODULE_MEDIA_WITHOUT_TEXT` (Content, Low) fires when a content module has at least one player and fewer than a configurable number of words of text (200 by default).
+
+### The asymmetry is the design
+
+This is the defensible half of a "multiple means of representation" check, and the half that was left out matters as much as the half that was built.
+
+**Flagged:** a module whose content is only a recording. That excludes students who cannot stream it, who are on a phone data plan, who need to search and skim rather than scrub through forty minutes of video, or for whom the captions are imperfect. It is also the usual sign that a lecture recording was dropped in without a transcript.
+
+**Deliberately not flagged:** a text-only module. In most subjects that is ordinary good teaching. A check that told instructors to add a video to every module would be giving bad pedagogical advice with TeachWell's authority behind it, and UDL does not ask for one of everything in every module — it asks for options where they matter.
+
+A counting check ("a module should offer two of text, media and practice") was considered and rejected for exactly that reason, and because `MODULE_NO_ASSESSMENT` already covers the missing-practice case.
+
+The check claims **no strength** in the guide: most modules legitimately have no media at all, so "every module with media also offers text" would be claimed overwhelmingly on courses the check never had anything to say about. It maps to no WCAG criterion — captions cover the conformance side; this is a design concern.
+
+This brings the catalogue to 43 checks.
+
+### Verification
+
+- SQLite suite: 292 passed, 0 failed (290 before this amendment; 2 new). No migration.
+- A module whose only content is a recording is flagged, naming its player count and word count; the same module with a summary page is not; **a text-only module is not flagged**, which is the assertion that pins the asymmetry; and the word threshold is the CTL's to change.
+- A snapshot without media counts reports the "start a new course review" limitation and flags nothing, rather than treating null as zero and flagging every module with text in it.

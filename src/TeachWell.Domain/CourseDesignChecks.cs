@@ -8,14 +8,14 @@ public static class CourseDesignChecks
         WorkloadImbalance = "WORKLOAD_IMBALANCE", DueSameDay = "ASSIGNMENTS_DUE_SAME_DAY", OutcomeVagueVerb = "OUTCOME_VAGUE_VERB",
         OutcomeNotAssessed = "OUTCOME_NOT_ASSESSED", OutcomesLowerOrder = "OUTCOMES_LOWER_ORDER_ONLY",
         EarlyPracticeMissing = "EARLY_LOW_STAKES_MISSING", OutcomeAssessmentMismatch = "OUTCOME_ASSESSMENT_LEVEL_MISMATCH",
-        ModuleDueOutOfOrder = "MODULE_DUE_DATES_OUT_OF_ORDER";
+        ModuleDueOutOfOrder = "MODULE_DUE_DATES_OUT_OF_ORDER", ModuleMediaOnly = "MODULE_MEDIA_WITHOUT_TEXT";
     public const string Keywords = "keywords", MaxItems = "maxItems", WordsPerMinute = "wordsPerMinute", MinutesPerAssignment = "minutesPerAssignment",
         Ratio = "ratio", MaxPerDay = "maxPerDay", VagueVerbs = "phrases", MinOutcomes = "minOutcomes", EarlyModules = "earlyModules", LowStakesPercent = "lowStakesPercent",
-        ToleranceDays = "toleranceDays";
+        ToleranceDays = "toleranceDays", MinWords = "minWords";
 
     public static readonly IReadOnlyList<CourseCheck> Rules =
-        [new NoOverview(), new TooManyItems(), new NoAssessment(), new Workload(), new SameDay(), new DueOrder(), new VagueOutcome(), new UnassessedOutcome(), new LowerOrderOutcomes(),
-         new EarlyPractice(), new LevelMismatch()];
+        [new NoOverview(), new TooManyItems(), new NoAssessment(), new MediaOnly(), new Workload(), new SameDay(), new DueOrder(), new VagueOutcome(), new UnassessedOutcome(),
+         new LowerOrderOutcomes(), new EarlyPractice(), new LevelMismatch()];
 
     private const int Modules = 1, Pacing = 4, Outcomes = 5;
     private const string OldStructure = "This course-structure snapshot predates {0}; start a new course review to capture the current structure.";
@@ -66,6 +66,42 @@ public static class CourseDesignChecks
                 $"Module \"{Clip(x.Module.Title)}\" has no assignment, quiz or graded discussion, so students get no practice or feedback on it.",
                 "Add a short practice task or check for understanding, or connect the module to a later assessment and say so in its overview.",
                 $"Module \"{Clip(x.Module.Title)}\": {Content(x.Module).Count()} items, 0 assessments.", x.Module.ElementId));
+    }
+
+    // A module whose content is only video or audio, with no readable equivalent (ROADMAP item 5).
+    //
+    // This is the defensible half of a "multiple means of representation" check, and the asymmetry is deliberate. A
+    // module that is only media excludes students who cannot use video, cannot stream it, or need to search, skim and
+    // revise from text — and it is the usual sign that a recorded lecture was dropped in without a transcript.
+    //
+    // The opposite is NOT flagged. A text-only module is ordinary good teaching in most subjects, and a check that told
+    // instructors to add a video to every module would be giving bad pedagogical advice with TeachWell's authority
+    // behind it. UDL asks for options where they matter, not for one of everything in every module.
+    private sealed class MediaOnly : CourseCheck
+    {
+        public override string Code => ModuleMediaOnly; public override string Name => "Module's content is only video or audio"; public override string Aspect => ReviewAspects.Content;
+        public override string DefaultSeverity => "Low"; public override int Stage => Modules;
+        public override IReadOnlyList<CheckParameter> Parameters =>
+            [CheckParameter.Number(MinWords, "Words of text a module with media should also offer", 200, 0, 5000)];
+        public override IEnumerable<CheckHit> Run(CourseCheckContext c, CheckSettings s)
+        {
+            var content = ContentModules(c).ToList();
+            // Media was added to the structure evidence in version 4; an older snapshot cannot answer this.
+            if (content.SelectMany(x => Content(x.Module)).Any(i => ReviewVocabulary.IsContent(i.Type) && i.Media is null))
+            {
+                c.Limit(string.Format(OldStructure, "the check for modules that offer only media"));
+                return [];
+            }
+            return content.Select(x => (x.Module, x.Index,
+                    Players: Content(x.Module).Sum(i => i.Media ?? 0),
+                    Words: Content(x.Module).Where(i => ReviewVocabulary.IsContent(i.Type)).Sum(i => i.Words ?? 0)))
+                .Where(x => x.Players > 0 && x.Words < s.Number(MinWords))
+                .Select(x => Hit(s, x.Index, $"{x.Module.ElementId}", "Module's content is only video or audio",
+                    $"Module \"{Clip(x.Module.Title)}\" has {x.Players} video or audio {(x.Players == 1 ? "player" : "players")} but only {x.Words:N0} words of text, fewer than the {s.Number(MinWords):0} this standard expects alongside media.",
+                    "Add a readable equivalent: a transcript, a summary of the key points, or the readings the recording is based on. Students who cannot stream the media, or who are revising, then have a way in.",
+                    $"Module \"{Clip(x.Module.Title)}\": {x.Players} player(s), {x.Words:N0} words of text.", x.Module.ElementId))
+                .ToList();
+        }
     }
 
     private sealed class Workload : CourseCheck

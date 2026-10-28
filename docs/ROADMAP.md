@@ -127,7 +127,7 @@ Deepen the side that cannot be bought. Each is one `CourseCheck` or `ElementChec
 | --- | --- | --- |
 | **Scaffolding order** | A module's work falls due before an earlier module's, so students meet later deadlines first. | **Built** (`MODULE_DUE_DATES_OUT_OF_ORDER`, ADR 018) |
 | **Captions** | A video or audio player has no captions track, or an embed's captions cannot be read from the page. | **Built** (`MEDIA_CAPTIONS_MISSING`, `MEDIA_CAPTIONS_UNCONFIRMED`, ADR 018 amendment) |
-| **UDL multiple means** | A module offers content in only one modality — all reading, or all video, with no practice. | Page-level media now captured; a module-level check still needs media counts in the course structure evidence |
+| **Media without a readable equivalent** | A module's content is only video or audio, with no transcript or summary. The inverse (text-only) is deliberately never flagged. | **Built** (`MODULE_MEDIA_WITHOUT_TEXT`, ADR 018 amendment) |
 | **First-week experience** | A new student cannot determine what to do first: no start-here path, no due date in week one, no contact route. | Partly covered; contact route needs the syllabus (item 4) |
 | **What changed since your last review** | Not a check but a view. Snapshots are already immutable and versioned, so a diff is nearly free. | Not started |
 
@@ -164,8 +164,8 @@ The honest division of labour is worth stating in the README rather than quietly
    ├── 5. Design checks
    │    ├── Scaffolding order      BUILT (ADR 018)
    │    ├── 5a. Capture media evidence          BUILT (ADR 018 amendment)
-   │    │    └── Captions checks   BUILT — closes the captions gap without Ally
-   │    └── UDL modality           needs media counts in course-structure evidence
+   │    │    ├── Captions checks   BUILT — closes the captions gap without Ally
+   │    │    └── Media without text  BUILT — structure evidence v4
    └── 6. Oversight trend          ALREADY BUILT — item withdrawn
 ```
 
@@ -189,9 +189,9 @@ Two enabling slices came out of building item 1, both blocking work first estima
 | 4a. Syllabus import (API and export) | Built and tested (ADR 019) |
 | 4. Syllabus required elements | Built and tested (ADR 019) |
 | 4b. Paste the syllabus (Simple Syllabus route) | Built and tested (ADR 019 amendment) |
-| 5. UDL modality | Needs media counts in `CourseStructureEvidence` |
+| 5. UDL modality | Built as `MODULE_MEDIA_WITHOUT_TEXT` (ADR 018 amendment) |
 
-Catalogue: **42 checks**, from 38 before this work.
+Catalogue: **43 checks**, from 38 before this work.
 
 ### Open: this college's syllabi are in Simple Syllabus
 
@@ -209,4 +209,4 @@ Two gaps, both environmental:
 - **The `SuppliedContent` migration.** PostgreSQL is not installed here, and the SQLite suite uses `EnsureCreated`, so it never exercises migrations. The migration is two additive nullable columns and the model snapshot is consistent, but it needs a PostgreSQL run before deployment.
 - **Ally's actual export format.** ADR 020's catalogue was checked column by column against [Anthology's Canvas export reference](https://help.anthology.com/ally-lms/en/administrators/ally-institution-report/institution-report-export/ally-institutional-report-exports-for-instructure-canvas.html) and matches it, which caught one real defect: the issue columns carry their severity in the header (`AlternativeText:2`), so the reader found none of them. Fixed, and both forms are now accepted. What is still unverified is whether a generated file differs from its own documentation, which is what the reader's notes exist to surface.
 
-The backend is otherwise covered by 290 passing tests.
+The backend is otherwise covered by 292 passing tests.

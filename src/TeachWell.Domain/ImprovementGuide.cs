@@ -120,6 +120,9 @@ public static class GuideCatalog
         [CourseDesignChecks.WorkloadImbalance] = E(45, "Workload is spread evenly across modules.", c => c.Modules >= 3),
         [CourseDesignChecks.DueSameDay] = E(5, "Due dates are spread out.", c => c.Assessments >= 2),
         [CourseDesignChecks.ModuleDueOutOfOrder] = E(5, "Deadlines advance in module order.", c => c.Assessments >= 2 && c.Modules >= 2),
+        // No strength: most modules legitimately have no media at all, so "every module with media also offers text"
+        // would be claimed overwhelmingly on courses the check never had anything to say about.
+        [CourseDesignChecks.ModuleMediaOnly] = E(20, null, _ => false),
         [CourseDesignChecks.OutcomeVagueVerb] = E(5, "Outcomes use measurable verbs.", c => c.Outcomes > 0),
         [CourseDesignChecks.OutcomeNotAssessed] = E(10, "Every outcome is assessed.", c => c.Outcomes > 0),
         [CourseDesignChecks.OutcomesLowerOrder] = E(20, "Outcomes reach beyond recall and comprehension.", c => c.Outcomes > 0),

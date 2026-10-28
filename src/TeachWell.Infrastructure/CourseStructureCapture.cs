@@ -65,12 +65,16 @@ public static class CourseStructureCapture
         {
             var content = placement.TargetElementId is { } t && byId.TryGetValue(t, out var target) ? target : placement;
             var status = placement.SourceStatus != "Published" ? placement.SourceStatus : content.SourceStatus;
+            var evidence = ContentEvidence.Parse(content.EvidenceJson);
             // Graded discussions carry assignment metadata too; ungraded ones have none, so their points stay null.
-            var assignment = ReviewVocabulary.IsAssessment(content.Type, graded: true) ? ContentEvidence.Parse(content.EvidenceJson)?.Assignment : null;
+            var assignment = ReviewVocabulary.IsAssessment(content.Type, graded: true) ? evidence?.Assignment : null;
+            // Recognised players only: an embedded tool is not media (ADR 018 amendment). Null means media was never
+            // captured for this item, which the checks report as a limitation rather than treating as zero.
+            var media = evidence?.Media is { } players ? players.Count(m => MediaKinds.IsPlayer(m.Kind)) : (int?)null;
             return new(content.Id, content.Type, placement.Title, status, latest.TryGetValue(content.Id, out var s) ? s : null,
                 assignment?.HasDueDate, assignment?.HasRubric, aligned.Contains(content.Id),
                 ReviewVocabulary.IsContent(content.Type) ? TextStats.CountWords(content.PlainText) : null, assignment?.PointsPossible, assignment?.DueAt,
-                ReviewVocabulary.IsAssessment(content.Type, graded: true) ? Bloom.HighestLevelIn(content.Title + " " + content.PlainText) : null);
+                ReviewVocabulary.IsAssessment(content.Type, graded: true) ? Bloom.HighestLevelIn(content.Title + " " + content.PlainText) : null, media);
         }
         List<T> Cap<T>(IEnumerable<T> source, int limit)
         {

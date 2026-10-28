@@ -153,6 +153,51 @@ public class CourseDesignCheckUnitTests
         Assert.Contains(CourseChecks.Run(Course([Module("Week 1: A", Page("Week 1 overview"), undated)])).Limitations, l => l.Contains("Due dates were not captured for 1"));
     }
 
+    [Fact] public void A_module_that_offers_only_media_is_flagged_but_a_text_only_module_is_not()
+    {
+        static CourseItemEvidence Video(string title, int players, int words = 0) =>
+            new(Guid.NewGuid(), "page", title, "Published", Guid.NewGuid(), null, null, false, words, Media: players);
+        static CourseItemEvidence Text(string title, int words) =>
+            new(Guid.NewGuid(), "page", title, "Published", Guid.NewGuid(), null, null, false, words, Media: 0);
+
+        // A module whose only content is a recording, with no readable equivalent.
+        var lecture = Module("Week 2: Lecture", Text("Week 2 overview", 20), Video("Week 2 lecture recording", 1));
+        var report = CourseChecks.Run(Course([Module("Start here", Text("Welcome", 100)), lecture]));
+        var finding = Assert.Single(New(report), f => f.CheckCode == CourseDesignChecks.ModuleMediaOnly);
+        Assert.Equal(lecture.ElementId, finding.SubjectElementId);
+        Assert.Contains("1 video or audio player but only 20 words", finding.Description);
+        Assert.Contains("transcript", finding.Recommendation);
+
+        // The same module with a readable equivalent is not flagged.
+        Assert.DoesNotContain(New(CourseChecks.Run(Course([Module("Start here", Text("Welcome", 100)),
+            Module("Week 2: Lecture", Text("Week 2 summary and readings", 400), Video("Week 2 lecture recording", 1))]))),
+            f => f.CheckCode == CourseDesignChecks.ModuleMediaOnly);
+
+        // The asymmetry this check is built on: a text-only module is ordinary good teaching and must never be
+        // flagged, because telling instructors to add a video to every module would be bad advice.
+        Assert.DoesNotContain(New(CourseChecks.Run(Course([Module("Start here", Text("Welcome", 100)),
+            Module("Week 2: Reading", Text("Week 2 reading", 1200))]))),
+            f => f.CheckCode == CourseDesignChecks.ModuleMediaOnly);
+
+        // The threshold is the CTL's to set.
+        var strict = CourseDesignChecks.Rules.Single(r => r.Code == CourseDesignChecks.ModuleMediaOnly).Defaults()
+            with { Numbers = new Dictionary<string, decimal> { [CourseDesignChecks.MinWords] = 600 } };
+        Assert.Contains(New(CourseChecks.Run(Course([Module("Start here", Text("Welcome", 100)),
+                Module("Week 2: Lecture", Text("Week 2 summary", 400), Video("Recording", 1))]),
+            new CheckProfile(new Dictionary<string, CheckSettings> { [CourseDesignChecks.ModuleMediaOnly] = strict }))),
+            f => f.CheckCode == CourseDesignChecks.ModuleMediaOnly);
+    }
+
+    [Fact] public void Snapshots_without_media_counts_report_a_limitation_rather_than_flagging_every_module()
+    {
+        // Media counts arrived with course-structure evidence version 4; before that, Media is null, not zero.
+        var old = new CourseItemEvidence(Guid.NewGuid(), "page", "Week 2 lecture", "Published", Guid.NewGuid(), null, null, false, 20);
+        Assert.Null(old.Media);
+        var report = CourseChecks.Run(Course([Module("Start here", Page("Welcome")), Module("Week 2: Lecture", old)]));
+        Assert.DoesNotContain(New(report), f => f.CheckCode == CourseDesignChecks.ModuleMediaOnly);
+        Assert.Contains(report.Limitations, l => l.Contains("only media") && l.Contains("start a new course review"));
+    }
+
     [Fact] public void Modules_whose_deadlines_run_backwards_are_flagged_against_the_previous_dated_module()
     {
         var october = new DateTime(2026, 10, 5, 23, 59, 0, DateTimeKind.Utc);
