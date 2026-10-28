@@ -57,6 +57,15 @@ public sealed class OversightService(AppDbContext db, IGuideService guide, Readi
         var issuesByAspect = ReviewAspects.All.Select(a => new AspectIssuesDto(a, GuideCatalog.Aspects[a].Label,
             aspectCounts.Sum(c => c.GetValueOrDefault(a)), aspectCounts.Count(c => c.GetValueOrDefault(a) > 0))).ToList();
         var checkCounts = latest.Values.Select(r => CourseGuideRecord.Counts(r.OpenByCheckJson)).ToList();
+        // Open accessibility work rolled up to WCAG success criteria, in criterion order (ADR 018 amendment). A course
+        // counts once per criterion however many of its checks are open, so CoursesAffected is comparable across rows.
+        var conformance = Wcag.Criteria.Select(criterion =>
+        {
+            var checks = Wcag.Checks(criterion);
+            var perCourse = checkCounts.Select(counts => checks.Sum(code => counts.GetValueOrDefault(code))).ToList();
+            return new ConformanceRollupDto(criterion.Number, criterion.Name, criterion.Level, criterion.Reference, checks,
+                perCourse.Count(places => places > 0), perCourse.Sum());
+        }).ToList();
         var topChecks = checkCounts.SelectMany(c => c).GroupBy(kv => kv.Key)
             .Select(g => (Check: CheckRegistry.Find(g.Key), Courses: g.Count(kv => kv.Value > 0), Places: g.Sum(kv => kv.Value)))
             .Where(x => x.Check is not null && x.Courses > 0).OrderByDescending(x => x.Courses).ThenByDescending(x => x.Places).ThenBy(x => x.Check!.Code, StringComparer.Ordinal)
@@ -100,10 +109,11 @@ public sealed class OversightService(AppDbContext db, IGuideService guide, Readi
             "Help requests count only those sent from an improvement-guide step.",
             "Readiness states and endorsements are CTL decisions recorded in TeachWell. An endorsement is not accreditation, compliance or certification.",
             "Course titles and figures are shown here; course content still requires ownership or an explicit share.",
+            $"The {Wcag.Version} rollup covers only the {Wcag.Criteria.Count} success criteria TeachWell's checks relate to, out of {Conformance.ReferenceCriteria} at Levels A and AA. It shows where work is outstanding and cannot show the opposite: a course with no open places for a criterion is not distinguished from one where that criterion's checks did not run. Use a course's own conformance report for that, and a manual review for the criteria no check covers.",
         ]);
         return ServiceResult<OversightDto>.Ok(new(scope, wanted, departments, courses.Count, latest.Count,
             OversightVocabulary.States.Select(s => new ReadinessStateCountDto(s, Labels[s], states.Values.Count(v => v == s))).ToList(),
             issuesByAspect, topChecks, help, progress, rows, endorsementRows, user.Roles.Contains(Roles.Reviewer), wantedProgram, programs,
-            oversight.AutoRecheckHours, lastAuto));
+            oversight.AutoRecheckHours, lastAuto, conformance));
     }
 }

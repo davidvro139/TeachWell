@@ -54,7 +54,9 @@ public static class DemoSeed
             course.Elements = [
                 new() { Id = moduleId, CourseId = courseId, SourceElementId = "module-1", Type = "module", Title = "Start here", PlainText = "Orientation, practice, and your first project." },
                 new() { Id = Guid.NewGuid(), CourseId = courseId, ParentElementId = moduleId, SourceElementId = "page-1", Type = "page", Title = "Welcome and learning goals" },
-                new() { Id = Guid.NewGuid(), CourseId = courseId, ParentElementId = moduleId, SourceElementId = "assignment-1", Type = "assignment", Title = "Your first accessible page" } ];
+                new() { Id = Guid.NewGuid(), CourseId = courseId, ParentElementId = moduleId, SourceElementId = "assignment-1", Type = "assignment", Title = "Your first accessible page" },
+                // The Canvas syllabus belongs to the course, not to a module, so it has no ParentElementId.
+                new() { Id = Guid.NewGuid(), CourseId = courseId, SourceElementId = ReviewVocabulary.SyllabusSourceId, Type = ReviewVocabulary.SyllabusType, Title = "Syllabus" } ];
             // Only the first course is explicitly shared with CTL.
             if (n == 1)
             {
@@ -131,10 +133,26 @@ public static class DemoSeed
     {
         [('1', "page-1")] = ("<h2>Welcome</h2><p>In this course you will build an accessible page, explain your design choices, and reflect on your process. This is fictional demo content.</p>" +
             "<img src=\"/demo/welcome-banner.png\" alt=\"welcome-banner.png\"><h4>What you will learn</h4><ul><li>Structure pages with semantic headings</li><li>Write descriptive links</li></ul>" +
-            "<p>Review the weekly schedule: <a href=\"https://schedule.example.org/web101\">click here</a>.</p><h3></h3>", null),
+            "<p>Review the weekly schedule: <a href=\"https://schedule.example.org/web101\">click here</a>.</p><h3></h3>" +
+            // One uncaptioned player (a definite finding) and one embed (a confirmation step), so both media checks have a worked example.
+            "<video controls title=\"Course walkthrough\"><source src=\"/demo/web101-walkthrough.mp4\"></video>" +
+            "<iframe title=\"Semantic HTML in 5 minutes\" src=\"https://www.youtube-nocookie.com/embed/demo-fictional\"></iframe>", null),
         [('1', "assignment-1")] = ("<p>Create a page with semantic headings, descriptive links, and useful image alternatives. Submit a short reflection. No student submissions are stored in TeachWell.</p>" +
             "<img src=\"/demo/sample-layout.png\"><table><tr><td>Part</td><td>Points</td></tr><tr><td>Page</td><td>8</td></tr><tr><td>Reflection</td><td>2</td></tr></table>",
             new(HasRubric: false, PointsPossible: 10, HasDueDate: false)),
+        // WEB 101's syllabus deliberately omits the accessibility statement, so the demo has one open required element.
+        [('1', ReviewVocabulary.SyllabusSourceId)] = ("<h2>WEB 101: Foundations of Web Development</h2><p>This is fictional demo content.</p>" +
+            "<h3>Contacting me</h3><p>Email me through Canvas; my office hours are Tuesdays 2–4pm. I normally respond within one working day.</p>" +
+            "<h3>Grading</h3><p>The grade breakdown is 60% projects, 25% labs and 15% participation, on the college grading scale.</p>" +
+            "<h3>Deadlines</h3><p>Late work loses 10% per day for up to five days. Tell me before the deadline if something has gone wrong.</p>" +
+            "<h3>Academic integrity</h3><p>Submitted work must be your own work, with sources cited. Ask me before using an AI tool for a graded task.</p>", null),
+        // DES 120's syllabus covers everything the defaults look for, so the step shows as finished there.
+        [('2', ReviewVocabulary.SyllabusSourceId)] = ("<h2>DES 120: Designing for Everyone</h2><p>This is fictional demo content.</p>" +
+            "<h3>Contacting me</h3><p>Email me through Canvas; student hours are Thursdays 10am–12pm.</p>" +
+            "<h3>Accessibility</h3><p>If you need an accommodation, contact Disability Services and let me know what helps. Tell me about any barrier in this course, whether or not you have documentation.</p>" +
+            "<h3>Grading</h3><p>The grading scale and grade breakdown are on the course home page: 50% studio work, 30% critique, 20% reflection.</p>" +
+            "<h3>Late work</h3><p>Every project has a 48-hour grace period. After that, talk to me about an extension.</p>" +
+            "<h3>Academic integrity</h3><p>Credit every source you build on, including images. Submitted work must be your own work.</p>", null),
         [('2', "page-1")] = ("<h2>Welcome</h2><p>Design with every learner in mind. This is fictional demo content.</p>" +
             "<img src=\"/demo/wireframes.png\" alt=\"Two learners sketching wireframes together at a table\"><h3>Getting started</h3>" +
             "<p>Read the <a href=\"/courses/demo-2/pages/syllabus\">course syllabus and grading policy</a> before the first session.</p>", null),
@@ -924,7 +942,10 @@ public static class DemoSeed
     private static async Task SeedOnlineStandardsAsync(AppDbContext db, Guid author)
     {
         if (await db.StandardSets.AnyAsync(s => s.Id == OnlineStandardSetId)) return;
-        var checks = StandardSetContent.InitialDefaults().Select(c => c.Code switch
+        // WithNewChecks brings in the checks added since the college-wide v1 was published, including the media checks.
+        // That keeps the demo honest about ADR 011: a new check reaches instructors only through a published version,
+        // so the college-wide fallback still runs the original set and this Online set runs the newer one.
+        var checks = StandardSetContent.WithNewChecks(StandardSetContent.InitialDefaults()).Select(c => c.Code switch
         {
             DeterministicChecks.ImageAltMissing or DeterministicChecks.LinkEmpty or DeterministicChecks.ItemUnavailable => c with { Required = true },
             CourseChecks.StartMissing => c with
@@ -937,7 +958,7 @@ public static class DemoSeed
             _ => c
         }).ToList();
         await PublishStandardSetAsync(db, author, OnlineStandardSetId, OnlineStandardVersionId, "Online course standards (demo)", StandardSetVocabulary.Online, null, checks,
-            "Online courses: accessibility basics and a clear starting point are required; video and slide links must be descriptive.");
+            "Online courses: accessibility basics and a clear starting point are required; video and slide links must be descriptive; video and audio are checked for captions.");
         foreach (var (id, mode, department) in new[] { (Course1, StandardSetVocabulary.Online, "Computing"), (Course2, StandardSetVocabulary.FaceToFace, "Design"),
             (Course3, StandardSetVocabulary.Hybrid, "Computing"), (Course5, StandardSetVocabulary.Online, "Education") })
             if (await db.Courses.SingleOrDefaultAsync(c => c.Id == id && c.DeliveryMode == null && c.Department == null) is { } course)

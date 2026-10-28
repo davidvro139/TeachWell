@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using TeachWell.Application;
+using TeachWell.Domain;
 
 namespace TeachWell.Infrastructure.Canvas;
 
@@ -81,11 +82,24 @@ public sealed partial class CanvasPatClient
             if (!NumericId(courseId)) return new(null, CanvasError.CourseNotAuthorized);
             var budget = new ReadBudget();
             var root = $"api/v1/courses/{courseId}";
-            var (courseJson, _) = await Read(origin, new Uri(origin, root), token, budget, ct);
+            // syllabus_body is not returned by default and has to be asked for by name.
+            var (courseJson, _) = await Read(origin, new Uri(origin, root + "?include[]=syllabus_body"), token, budget, ct);
             using var course = courseJson;
             if (!Teacher(course.RootElement) || Id(course.RootElement) != courseId) return new(null, CanvasError.CourseNotAuthorized);
             var option = new CanvasCourseOption(courseId, Text(course.RootElement, "name"), Text(course.RootElement, "course_code"));
             var elements = new List<CanvasElementData>(); var warnings = new List<string>();
+
+            // The Canvas syllabus: one course-level page, reached from the course navigation rather than a module.
+            // Canvas omits the property entirely when the course has no syllabus, and returns null when it is empty.
+            var syllabusBody = course.RootElement.TryGetProperty("syllabus_body", out var sb) && sb.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined)
+                ? Text(course.RootElement, "syllabus_body", 60000) : null;
+            if (!string.IsNullOrWhiteSpace(syllabusBody))
+            {
+                var (syllabusText, syllabusEvidence) = CanvasText.Normalize(syllabusBody, origin);
+                elements.Add(new(ReviewVocabulary.SyllabusSourceId, ReviewVocabulary.SyllabusType, "Syllabus", syllabusText,
+                    new Uri(origin, $"courses/{courseId}/assignments/syllabus").AbsoluteUri, "Published",
+                    Evidence: syllabusEvidence, PreviewHtml: CanvasText.Preview(syllabusBody, origin)));
+            }
             var pageIds = new Dictionary<string, string>(StringComparer.Ordinal);
             var pages = await Collection(origin, root + "/pages?per_page=50", token, budget, ct);
             foreach (var page in pages)

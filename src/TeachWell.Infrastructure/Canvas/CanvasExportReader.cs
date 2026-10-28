@@ -83,6 +83,16 @@ public static class CanvasExportReader
         static string Link(string suffix) => suffix;
 
         var elements = new List<CanvasElementData>(); var warnings = new List<string>();
+
+        // The Canvas syllabus. Canvas exports it as a standalone file rather than as a manifest resource, so it is
+        // read by path. An export from a course with no syllabus simply has no such file.
+        if (Html(entries, "course_settings/syllabus.html") is { } syllabusHtml && !string.IsNullOrWhiteSpace(CanvasText.FromHtml(syllabusHtml)))
+        {
+            var (syllabusText, syllabusEvidence) = CanvasText.Normalize(syllabusHtml, null);
+            elements.Add(new(ReviewVocabulary.SyllabusSourceId, ReviewVocabulary.SyllabusType, "Syllabus", syllabusText,
+                Link("assignments/syllabus"), "Published", Evidence: syllabusEvidence, PreviewHtml: CanvasText.Preview(syllabusHtml, null)));
+        }
+
         var pages = new HashSet<string>(StringComparer.Ordinal); var assignments = new HashSet<string>(StringComparer.Ordinal);
         var newQuizzes = new HashSet<string>(StringComparer.Ordinal);
         foreach (var r in resources.Where(r => r.Href is { } h && h.StartsWith("wiki_content/", StringComparison.Ordinal) && h.EndsWith(".html", StringComparison.OrdinalIgnoreCase)))

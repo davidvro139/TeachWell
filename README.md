@@ -20,7 +20,7 @@ TeachWell models the day-to-day work of a CTL instructional designer supporting 
 
 | CTL work | How TeachWell supports it |
 | --- | --- |
-| **Assess and remediate courses for accessibility and quality** | 38 configurable checks find accessibility barriers: missing, empty or file-name alt text, empty or skipped headings, vague link text, tables without header cells, and color-only instructions. They also find design issues such as reading level, page length, module overviews, workload balance and clustered deadlines. Each issue names the exact page and explains how to fix it in Canvas. Fixes are tracked as revision tasks until they are resolved. |
+| **Assess and remediate courses for accessibility and quality** | 42 configurable checks find accessibility barriers: missing, empty or file-name alt text, empty or skipped headings, vague link text, tables without header cells, color-only instructions, and video or audio without captions. They also find design issues such as reading level, page length, module overviews, workload balance, clustered deadlines and deadlines that run out of module order. Accessibility checks carry the WCAG 2.1 success criterion they relate to, and a per-course conformance report summarises them for the college's own documentation ([ADR 018](docs/ADR-018-WCAG-MAPPING-AND-CONFORMANCE.md)). Each issue names the exact page and explains how to fix it in Canvas. Fixes are tracked as revision tasks until they are resolved. |
 | **Competency-based curriculum** | Instructors map competencies to assessments. TeachWell flags competencies that nothing assesses and assessments that map to no competency. It also flags vague outcomes and assessments that sit below their outcome's Bloom's level. |
 | **Multiple delivery methods** | The CTL maintains versioned standard sets for a department and delivery method (online, hybrid or face-to-face). Each course is checked against the standard set that fits it. |
 | **Consistent, evidence-based reviews** | Rubric reviews are pinned to a snapshot of exactly what was reviewed and to the rubric version used. A later edit never rewrites an earlier assessment, and each automated finding is confirmed or rejected by a person. |
@@ -69,7 +69,7 @@ See the **[demo guide](docs/DEMO_GUIDE.md)** for the full feature reference and 
   - 20 Playwright specs in Microsoft Edge, each run against an isolated, throwaway database.
   - Coverage includes permission denials, invalid input, CSRF and malicious HTML.
 - **A hosted demo that never makes visitors wait.** The sample data is rebuilt daily in a separate PostgreSQL schema, then swapped in with one transaction. Visitors never wait for a reset, even though the free instance sleeps when idle ([ADR 017](docs/ADR-017-HOSTED-PUBLIC-DEMO.md)).
-- **Documented decisions.** 17 ADRs under [docs/](docs/) record every non-obvious choice, with its trade-offs and limitations.
+- **Documented decisions.** 20 ADRs under [docs/](docs/) record every non-obvious choice, with its trade-offs and limitations.
 
 ## Run locally (Windows)
 
@@ -122,9 +122,9 @@ tests/
   TeachWell.IntegrationTests  xUnit unit and integration tests (SQLite or PostgreSQL)
 ```
 
-Design documents: [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), [API contract](docs/API_CONTRACT.md), [review framework](docs/REVIEW_FRAMEWORK.md), [workflows](docs/WORKFLOWS.md), [Canvas connections](docs/CANVAS_CONNECTIONS.md), [local development](docs/LOCAL_DEVELOPMENT.md).
+Design documents: [roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), [API contract](docs/API_CONTRACT.md), [review framework](docs/REVIEW_FRAMEWORK.md), [workflows](docs/WORKFLOWS.md), [Canvas connections](docs/CANVAS_CONNECTIONS.md), [local development](docs/LOCAL_DEVELOPMENT.md).
 
-Decision records: [foundation](docs/ADR-001-PHASE-1.md), [local development and sharing](docs/ADR-002-LOCAL-DEVELOPMENT-AND-SHARING.md), [Canvas connections](docs/ADR-003-CANVAS-CONNECTIONS.md), [course import](docs/ADR-004-CANVAS-COURSE-IMPORT.md), [review framework](docs/ADR-005-REVIEW-FRAMEWORK.md), [revision tasks](docs/ADR-006-REVISION-TASKS.md), [faculty support](docs/ADR-007-FACULTY-SUPPORT.md), [alignment and reporting](docs/ADR-008-ALIGNMENT-AND-REPORTING.md), [course review and preview](docs/ADR-009-COURSE-REVIEW-AND-PREVIEW.md), [course export import](docs/ADR-010-COURSE-EXPORT-IMPORT.md), [review engine and improvement guide](docs/ADR-011-REVIEW-ENGINE-AND-IMPROVEMENT-GUIDE.md), [one-click demo sign-in](docs/ADR-012-DEMO-QUICK-SIGN-IN.md), [readiness review and endorsement](docs/ADR-013-READINESS-REVIEW-AND-ENDORSEMENT.md), [oversight and Academic administrator](docs/ADR-014-OVERSIGHT-AND-ACADEMIC-ADMINISTRATOR.md), [glossary](docs/ADR-015-GLOSSARY.md), [plain language and start path](docs/ADR-016-PLAIN-LANGUAGE-AND-START-PATH.md), [hosted public demo](docs/ADR-017-HOSTED-PUBLIC-DEMO.md).
+Decision records: [foundation](docs/ADR-001-PHASE-1.md), [local development and sharing](docs/ADR-002-LOCAL-DEVELOPMENT-AND-SHARING.md), [Canvas connections](docs/ADR-003-CANVAS-CONNECTIONS.md), [course import](docs/ADR-004-CANVAS-COURSE-IMPORT.md), [review framework](docs/ADR-005-REVIEW-FRAMEWORK.md), [revision tasks](docs/ADR-006-REVISION-TASKS.md), [faculty support](docs/ADR-007-FACULTY-SUPPORT.md), [alignment and reporting](docs/ADR-008-ALIGNMENT-AND-REPORTING.md), [course review and preview](docs/ADR-009-COURSE-REVIEW-AND-PREVIEW.md), [course export import](docs/ADR-010-COURSE-EXPORT-IMPORT.md), [review engine and improvement guide](docs/ADR-011-REVIEW-ENGINE-AND-IMPROVEMENT-GUIDE.md), [one-click demo sign-in](docs/ADR-012-DEMO-QUICK-SIGN-IN.md), [readiness review and endorsement](docs/ADR-013-READINESS-REVIEW-AND-ENDORSEMENT.md), [oversight and Academic administrator](docs/ADR-014-OVERSIGHT-AND-ACADEMIC-ADMINISTRATOR.md), [glossary](docs/ADR-015-GLOSSARY.md), [plain language and start path](docs/ADR-016-PLAIN-LANGUAGE-AND-START-PATH.md), [hosted public demo](docs/ADR-017-HOSTED-PUBLIC-DEMO.md), [WCAG mapping and conformance](docs/ADR-018-WCAG-MAPPING-AND-CONFORMANCE.md), [syllabus import and required elements](docs/ADR-019-SYLLABUS-IMPORT-AND-REQUIRED-ELEMENTS.md), [Ally report ingestion](docs/ADR-020-ALLY-REPORT-INGESTION.md).
 
 ## Project status
 
@@ -137,7 +137,7 @@ Working today, verified with fictional data:
 - competency alignment and reporting
 - readiness endorsement and oversight
 
-**Roadmap:**
+**Roadmap.** [docs/ROADMAP.md](docs/ROADMAP.md) records how TeachWell compares to Anthology Ally, what it should build as a result, and what it deliberately will not build. In short: ingest Ally's file-level findings rather than reimplement them, and spend the saved effort on the course-design and evidence work Ally has no concept of. Also planned:
 - **Live Canvas API test:** the API connection is built and tested against simulated Canvas responses. It still needs testing with a live Canvas account.
 - **Campus integration:** Microsoft sign-in, a Canvas developer key or LTI 1.3 launch with scheduled re-sync, and optional instructor-approved changes written back to Canvas. These need the institution's security review and approval.
 - **AI suggestions:** for example, drafting alt text or rewriting a vague outcome. They would be off by default, opt-in, never applied automatically, and need institutional approval.

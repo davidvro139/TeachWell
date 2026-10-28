@@ -55,6 +55,9 @@ Use UUID PKs, UTC `created_at`/`updated_at`, FK constraints, appropriate indexes
 - `courses` gains program_nullable (CTL-maintained; oversight filtering only). `audit_logs` gains indexes on timestamp, and on actor_id plus timestamp. System entries use actor_id `00000000-…` with the tenant as entity.
 - Roles gain `AcademicAdmin` (read-only oversight, D3).
 - Evidence JSON (no schema change): assignment evidence gains `dueAt` (UTC); course-structure evidence version 2 adds per-item `words`, `points`, `dueAt` and an `outcomes` list (code, title, description, mapped assignment count).
+- Elements (no schema change, ADR 019): a course's Canvas syllabus is imported as a `CourseElement` of type `syllabus` with the fixed source id `syllabus` and no `ParentElementId`. It is in `ReviewVocabulary.CheckedTypes` (the element checks run on it) but not in `ElementTypes`, so it is never treated as content placed in a module.
+- Elements (migration `SuppliedContent`, ADR 019 amendment): `SuppliedAt` and `SuppliedBy` record content a person supplied here rather than TeachWell importing it — today, a pasted syllabus. Supplied content is skipped when an import is applied and excluded from the "missing" sweep, so an import can neither overwrite nor remove it.
+- Evidence JSON (no schema change, ADR 018 amendment): page evidence version 2 adds a `media` list (index, kind, provider host, title, `hasCaptionTrack`). `media` is null on earlier snapshots, which means "not captured" and is distinct from an empty list meaning "no media on the page". Captured before the HTML strip removes iframes, and holding facts only — never a `src`, URL or markup.
 
 ## Integrity rules
 - A review snapshot and element must belong to the same course.

@@ -15,15 +15,18 @@ public static partial class CanvasText
     // the visual preview is a separate, allowlisted re-serialization (Preview below).
     public static (string Text, ContentEvidence Evidence) Normalize(string? html, Uri? origin, AssignmentEvidence? assignment = null)
     {
-        if (string.IsNullOrEmpty(html)) return ("", new(ContentEvidence.CurrentVersion, [], [], [], [], assignment));
+        if (string.IsNullOrEmpty(html)) return ("", new(ContentEvidence.CurrentVersion, [], [], [], [], assignment, Media: []));
         if (html.Length > 60000) throw new CanvasReadException(TeachWell.Application.CanvasError.LimitExceeded);
         // HtmlParser has no browsing context, resource loader or JavaScript engine.
         using var document = new HtmlParser(new HtmlParserOptions { IsScripting = false }).ParseDocument(html);
+        // Media facts are read before the strip, because iframes, objects and embeds are about to be removed and are
+        // never rendered. Nothing but the facts in MediaEvidence survives this call.
+        var media = document.Body is null ? [] : Media(document.Body, origin);
         foreach (var node in document.QuerySelectorAll("script,style,iframe,object,embed,template,noscript,form,input,button,link,meta,svg,math")) node.Remove();
         var result = new StringBuilder();
-        if (document.Body is null) return ("", new(ContentEvidence.CurrentVersion, [], [], [], [], assignment));
+        if (document.Body is null) return ("", new(ContentEvidence.CurrentVersion, [], [], [], [], assignment, Media: []));
         Walk(document.Body, result);
-        return (result.ToString().Trim(), Evidence(document.Body, origin, assignment));
+        return (result.ToString().Trim(), Evidence(document.Body, origin, assignment, media));
     }
 
     private const int PreviewNodeLimit = 20000, PreviewLengthLimit = 200000, PreviewDepthLimit = 48;
@@ -238,7 +241,70 @@ public static partial class CanvasText
     [System.Text.RegularExpressions.GeneratedRegex(@"^[^\s]+\.(png|jpe?g|gif|svg|webp|bmp|tiff?)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
     private static partial System.Text.RegularExpressions.Regex FileName();
 
-    private static ContentEvidence Evidence(IElement body, Uri? origin, AssignmentEvidence? assignment)
+    // Video and audio players on the page, in document order (ROADMAP item 5a). Called before the strip removes
+    // iframes, objects and embeds. Canvas produces all of these: <video>/<audio> for uploaded media, an iframe for
+    // Studio and for YouTube or Vimeo, and a legacy <a class="instructure_inline_media_comment"> for old recordings.
+    private static List<MediaEvidence> Media(IElement body, Uri? origin)
+    {
+        var nodes = body.QuerySelectorAll("video,audio,iframe,object,embed,a.instructure_inline_media_comment");
+        var media = new List<MediaEvidence>();
+        foreach (var el in nodes.Take(EvidenceItemLimit))
+        {
+            // A <source> child is the usual way Canvas sets the file, so the src may be on either element.
+            var source = el.GetAttribute("src") ?? el.GetAttribute("data") ?? el.GetAttribute("href")
+                ?? el.QuerySelector("source[src]")?.GetAttribute("src");
+            var provider = source is null ? null : Classify(source, origin).Host;
+            // aria-label and title are what a screen reader announces for the player; Canvas sets title on its iframes.
+            var title = el.GetAttribute("aria-label") is { Length: > 0 } label ? label
+                : el.GetAttribute("title") is { Length: > 0 } t ? t
+                : Collapse(el.TextContent) is { Length: > 0 } text ? text : null;
+            var (kind, captions) = el.TagName switch
+            {
+                // A track is authoritative only on an HTML player: no track means no captions on this page.
+                "VIDEO" => (MediaKinds.Video, (bool?)HasCaptions(el)),
+                "AUDIO" => (MediaKinds.Audio, HasCaptions(el)),
+                // Canvas's own markup for a recorded media comment says outright that it is media.
+                "A" => (MediaKinds.Embed, null),
+                // An iframe or object is a player only if its source looks like one; otherwise it is an embedded tool.
+                _ => (IsMediaSource(source) ? MediaKinds.Embed : MediaKinds.Tool, null),
+            };
+            media.Add(new MediaEvidence(media.Count, kind, provider, Clip(title), captions));
+        }
+        return media;
+    }
+
+    // Hosts whose embeds are video or audio players. Deliberately a recognition aid, not a gate: an unrecognised embed
+    // is recorded as a Tool and reported as not inspected, never silently dropped and never asked about captions.
+    // Matched on the host's labels so a regional or tenant subdomain (eu.kaltura.com, college.hosted.panopto.com)
+    // matches, while a lookalike registered elsewhere (youtube.com.evil.test) does not.
+    private static readonly string[] MediaHosts =
+    [
+        "youtube.com", "youtu.be", "youtube-nocookie.com", "vimeo.com", "dailymotion.com", "ted.com", "twitch.tv",
+        "kaltura.com", "panopto.com", "panopto.eu", "echo360.org", "echo360.com", "instructuremedia.com",
+        "soundcloud.com", "spotify.com", "loom.com", "microsoftstream.com", "wistia.com", "wistia.net",
+        "brightcove.net", "brightcove.com", "vidyard.com", "warpwire.com", "mediasite.com", "ensemblevideo.com",
+        "screencast.com", "3playmedia.com", "amara.org",
+    ];
+    // Canvas serves its own uploaded media (Studio, My Media, recorded comments) from the course's own host, so those
+    // embeds have no external provider and are recognised by the path Canvas uses for them instead.
+    private static readonly string[] CanvasMediaPaths = ["media_objects_iframe", "media_attachments_iframe", "media_objects/", "media_attachments/"];
+
+    private static bool IsMediaSource(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source)) return false;
+        if (CanvasMediaPaths.Any(p => source.Contains(p, StringComparison.OrdinalIgnoreCase))) return true;
+        // A protocol-relative source is not an absolute URI, so give it a scheme first, as Classify does.
+        var value = source.Trim();
+        if (value.StartsWith("//", StringComparison.Ordinal)) value = "https:" + value;
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) return false;
+        var host = uri.Host.ToLowerInvariant();
+        return MediaHosts.Any(h => host == h || host.EndsWith("." + h, StringComparison.Ordinal));
+    }
+
+    private static bool HasCaptions(IElement player) =>
+        player.QuerySelectorAll("track").Any(t => t.GetAttribute("kind")?.Trim().ToLowerInvariant() is "captions" or "subtitles");
+
+    private static ContentEvidence Evidence(IElement body, Uri? origin, AssignmentEvidence? assignment, List<MediaEvidence> media)
     {
         var truncated = false;
         List<T> Take<T>(IEnumerable<IElement> nodes, Func<IElement, int, T> map)
@@ -258,7 +324,8 @@ public static partial class CanvasText
             return new LinkEvidence(i, Clip(name)!, kind, host);
         });
         var tables = Take(body.QuerySelectorAll("table"), (t, i) => new TableEvidence(i, t.QuerySelector("th") is not null, t.QuerySelectorAll("tr").Length));
-        return new(ContentEvidence.CurrentVersion, images, headings, links, tables, assignment, truncated);
+        if (media.Count >= EvidenceItemLimit) truncated = true;
+        return new(ContentEvidence.CurrentVersion, images, headings, links, tables, assignment, truncated, media);
     }
 
     // Keeps only a destination kind and external host; full URLs can carry query-string secrets.

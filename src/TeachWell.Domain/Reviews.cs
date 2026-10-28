@@ -13,6 +13,20 @@ public static class ReviewVocabulary
     public static readonly string[] ElementTypes = ["page", "assignment", QuizType, DiscussionType];
     // Course content items (as opposed to modules and module items).
     public static bool IsContent(string type) => ElementTypes.Contains(type);
+
+    // The Canvas syllabus: one course-level page, reached from the course navigation rather than from a module.
+    public const string SyllabusType = "syllabus";
+    // The syllabus is a property of the course, not a resource with its own Canvas id, so imports use a fixed source
+    // id. Elements are matched on (Type, SourceElementId), and nothing else has type "syllabus", so this is stable
+    // across both readers and lets a refresh update the same element rather than adding a second one.
+    public const string SyllabusSourceId = "syllabus";
+    // Types whose text and evidence the element checks run against. The syllabus is here because its content should be
+    // as accessible as any page, but it is deliberately NOT in ElementTypes, which means "content placed in modules":
+    // the syllabus belongs to the course, so counting it as content would make CONTENT_NOT_IN_MODULE fire on every
+    // course that has one. Keeping it out of ElementTypes also keeps it out of rubric element reviews and their
+    // criterion targets, which stay "page", "assignment" and "course".
+    public static readonly string[] CheckedTypes = [.. ElementTypes, SyllabusType];
+    public static bool IsChecked(string type) => CheckedTypes.Contains(type);
     // Graded or practice work students submit. Quizzes are reviewed against a rubric's assignment criteria.
     public static readonly string[] AssessmentTypes = ["assignment", QuizType];
     public static bool IsAssessment(string type) => type is "assignment" or QuizType;

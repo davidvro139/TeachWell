@@ -7,12 +7,14 @@ public static class CourseDesignChecks
     public const string ModuleNoOverview = "MODULE_NO_OVERVIEW", ModuleTooManyItems = "MODULE_TOO_MANY_ITEMS", ModuleNoAssessment = "MODULE_NO_ASSESSMENT",
         WorkloadImbalance = "WORKLOAD_IMBALANCE", DueSameDay = "ASSIGNMENTS_DUE_SAME_DAY", OutcomeVagueVerb = "OUTCOME_VAGUE_VERB",
         OutcomeNotAssessed = "OUTCOME_NOT_ASSESSED", OutcomesLowerOrder = "OUTCOMES_LOWER_ORDER_ONLY",
-        EarlyPracticeMissing = "EARLY_LOW_STAKES_MISSING", OutcomeAssessmentMismatch = "OUTCOME_ASSESSMENT_LEVEL_MISMATCH";
+        EarlyPracticeMissing = "EARLY_LOW_STAKES_MISSING", OutcomeAssessmentMismatch = "OUTCOME_ASSESSMENT_LEVEL_MISMATCH",
+        ModuleDueOutOfOrder = "MODULE_DUE_DATES_OUT_OF_ORDER";
     public const string Keywords = "keywords", MaxItems = "maxItems", WordsPerMinute = "wordsPerMinute", MinutesPerAssignment = "minutesPerAssignment",
-        Ratio = "ratio", MaxPerDay = "maxPerDay", VagueVerbs = "phrases", MinOutcomes = "minOutcomes", EarlyModules = "earlyModules", LowStakesPercent = "lowStakesPercent";
+        Ratio = "ratio", MaxPerDay = "maxPerDay", VagueVerbs = "phrases", MinOutcomes = "minOutcomes", EarlyModules = "earlyModules", LowStakesPercent = "lowStakesPercent",
+        ToleranceDays = "toleranceDays";
 
     public static readonly IReadOnlyList<CourseCheck> Rules =
-        [new NoOverview(), new TooManyItems(), new NoAssessment(), new Workload(), new SameDay(), new VagueOutcome(), new UnassessedOutcome(), new LowerOrderOutcomes(),
+        [new NoOverview(), new TooManyItems(), new NoAssessment(), new Workload(), new SameDay(), new DueOrder(), new VagueOutcome(), new UnassessedOutcome(), new LowerOrderOutcomes(),
          new EarlyPractice(), new LevelMismatch()];
 
     private const int Modules = 1, Pacing = 4, Outcomes = 5;
@@ -121,6 +123,39 @@ public static class CourseDesignChecks
                     $"{g.Count()} assignments are due on {g.Key:MMMM d, yyyy}.",
                     "Spread the deadlines across the week, or combine small tasks, so students can give each one proper attention.",
                     $"Due {g.Key:yyyy-MM-dd} ({c.TimeZone.Id}): {string.Join("; ", g.Select(a => $"\"{Clip(a.Title)}\""))}.", g.First().ElementId)).ToList();
+        }
+    }
+
+    // Scaffolding: a course is read in module order, so its deadlines should advance in module order too. When a later
+    // module's work falls due before an earlier module's, students must work ahead of where the course has taken them.
+    // Only consecutive dated modules are compared, so an undated module does not break the chain's meaning.
+    private sealed class DueOrder : CourseCheck
+    {
+        public override string Code => ModuleDueOutOfOrder; public override string Name => "Module deadlines run out of order"; public override string Aspect => ReviewAspects.Assessment;
+        public override string DefaultSeverity => "Medium"; public override int Stage => Pacing;
+        public override IReadOnlyList<CheckParameter> Parameters =>
+            [CheckParameter.Number(ToleranceDays, "Days a module may fall due before the previous one", 0, 0, 30)];
+        public override IEnumerable<CheckHit> Run(CourseCheckContext c, CheckSettings s)
+        {
+            // A module's own deadline is the earliest its students are asked to submit anything.
+            // Min over a nullable projection is null when the module has no dated assessment, which drops it from the chain.
+            var dated = c.Structure.Modules.Select((m, i) => (Module: m, Index: i, Earliest: m.Items.Where(x => x.IsAssessed).Min(x => x.DueAt)))
+                .Where(x => x.Earliest is not null).ToList();
+            if (dated.Count < 2) yield break;
+
+            var tolerance = TimeSpan.FromDays((double)s.Number(ToleranceDays));
+            for (var i = 1; i < dated.Count; i++)
+            {
+                var (module, index, earliest) = dated[i];
+                var (previous, _, previousEarliest) = dated[i - 1];
+                if (earliest!.Value.Add(tolerance) >= previousEarliest!.Value) continue;
+                var days = (int)Math.Ceiling((previousEarliest.Value - earliest.Value).TotalDays);
+                yield return Hit(s, index, $"{module.ElementId}", "Module deadlines run out of order",
+                    $"Module \"{Clip(module.Title)}\" has work due {days} day(s) before \"{Clip(previous.Title)}\", which comes before it in the course.",
+                    "Check the due dates against the order students work through the modules, or move the module to where its deadlines place it.",
+                    $"\"{Clip(module.Title)}\" earliest due {earliest:yyyy-MM-dd}; \"{Clip(previous.Title)}\" earliest due {previousEarliest:yyyy-MM-dd}.",
+                    module.ElementId);
+            }
         }
     }
 

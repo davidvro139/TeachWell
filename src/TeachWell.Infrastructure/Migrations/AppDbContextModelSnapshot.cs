@@ -487,6 +487,12 @@ namespace TeachWell.Infrastructure.Migrations
                     b.Property<string>("SourceWarning")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("SuppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SuppliedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("TargetElementId")
                         .HasColumnType("uuid");
 

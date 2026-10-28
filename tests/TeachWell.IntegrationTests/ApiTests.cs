@@ -142,8 +142,9 @@ public class ApiTests
         Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/api/v1/admin/users")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/api/v1/courses/30000000-0000-0000-0000-000000000001")).StatusCode);
         using var scope = f.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Equal(2, await db.Courses.CountAsync()); Assert.Equal(6, await db.Elements.CountAsync()); Assert.Equal(5, await db.AuditLogs.CountAsync());
-        Assert.Equal(6, await db.ElementSnapshots.CountAsync()); Assert.Single(await db.RubricVersions.ToListAsync()); Assert.Single(await db.StandardSetVersions.ToListAsync());
+        // Four elements per demo course: a module, a page, an assignment and the course syllabus (ADR 019).
+        Assert.Equal(2, await db.Courses.CountAsync()); Assert.Equal(8, await db.Elements.CountAsync()); Assert.Equal(5, await db.AuditLogs.CountAsync());
+        Assert.Equal(8, await db.ElementSnapshots.CountAsync()); Assert.Single(await db.RubricVersions.ToListAsync()); Assert.Single(await db.StandardSetVersions.ToListAsync());
         Assert.Single(await db.KnowledgeArticles.ToListAsync()); Assert.Single(await db.Workshops.ToListAsync());
     }
     [Fact] public void Tenant_boundary_overrides_ownership_and_explicit_access()

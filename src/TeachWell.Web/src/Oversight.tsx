@@ -19,6 +19,9 @@ interface Oversight {
   topChecks: { checkCode: string; name: string; aspect: string; coursesAffected: number; openPlaces: number }[];
   helpRequests: { total: number; open: number; byCategory: { category: string; count: number }[] };
   progress: { weekEnding: string; coursesChecked: number; openPlaces: number; donePlaces: number; notApplicablePlaces: number }[];
+  // Open accessibility work rolled up to WCAG success criteria (ADR 018 amendment). It shows where work is
+  // outstanding and deliberately cannot show the opposite; the scope caveats say so.
+  conformance: { number: string; name: string; level: string; reference: string; checks: string[]; coursesAffected: number; openPlaces: number }[];
   courseRows: {
     courseId: string;
     code: string;
@@ -243,6 +246,43 @@ export function Oversight({ onOpenCourse, onSessionExpired }: { onOpenCourse: (c
                   </table>
                 </div>
               </>
+            )}
+          </section>
+
+          <section className="panel" aria-labelledby="oversight-conformance">
+            <h2 id="oversight-conformance">Accessibility work by WCAG criterion</h2>
+            <p className="fine">
+              Open accessibility work across the courses in scope, grouped by the WCAG 2.1 success criterion each check relates to. This shows where
+              work is outstanding; it cannot show that a criterion is met, and it covers only the criteria TeachWell&rsquo;s checks relate to. A
+              course&rsquo;s own conformance report draws that distinction.
+            </p>
+            {data.conformance.every((c) => c.openPlaces === 0) ? (
+              <p className="sharing-empty">No open accessibility work recorded for these criteria.</p>
+            ) : (
+              <div className="table-scroll">
+                <table className="feedback-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Success criterion</th>
+                      <th scope="col">Level</th>
+                      <th scope="col">Courses with open work</th>
+                      <th scope="col">Open places</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.conformance.map((c) => (
+                      <tr key={c.number}>
+                        <th scope="row">
+                          {c.number} {c.name}
+                        </th>
+                        <td>{c.level}</td>
+                        <td>{c.coursesAffected}</td>
+                        <td>{c.openPlaces}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 

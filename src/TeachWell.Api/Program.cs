@@ -87,6 +87,8 @@ builder.Services.AddScoped<IGlossaryService, TeachWell.Infrastructure.Support.Gl
 builder.Services.AddScoped<IWorkshopService, TeachWell.Infrastructure.Support.WorkshopService>();
 builder.Services.AddScoped<ICompetencyService, TeachWell.Infrastructure.Reports.CompetencyService>();
 builder.Services.AddScoped<IReportService, TeachWell.Infrastructure.Reports.ReportService>();
+builder.Services.AddScoped<IConformanceService, TeachWell.Infrastructure.Reports.ConformanceService>();
+builder.Services.AddScoped<ISyllabusService, TeachWell.Infrastructure.SyllabusService>();
 builder.Services.AddSingleton<CanvasIntegrationOptions>();
 builder.Services.AddSingleton<InstitutionSettings>();
 builder.Services.AddSingleton<CourseExportOptions>();

@@ -153,6 +153,38 @@ public class CourseDesignCheckUnitTests
         Assert.Contains(CourseChecks.Run(Course([Module("Week 1: A", Page("Week 1 overview"), undated)])).Limitations, l => l.Contains("Due dates were not captured for 1"));
     }
 
+    [Fact] public void Modules_whose_deadlines_run_backwards_are_flagged_against_the_previous_dated_module()
+    {
+        var october = new DateTime(2026, 10, 5, 23, 59, 0, DateTimeKind.Utc);
+        ModuleEvidence Week(string title, DateTime? due) => Module(title, Page($"{title} overview"), Assignment($"{title} quiz", due: due));
+
+        // Week 3 is due a week before Week 2, so students meet its deadline first.
+        var backwards = Week("Week 3", october);
+        var report = CourseChecks.Run(Course([Week("Week 1", october.AddDays(-7)), Week("Week 2", october.AddDays(7)), backwards]));
+        var finding = Assert.Single(New(report), f => f.CheckCode == CourseDesignChecks.ModuleDueOutOfOrder);
+        Assert.Equal(backwards.ElementId, finding.SubjectElementId);
+        Assert.Contains("7 day(s) before", finding.Description);
+        Assert.Contains("earliest due 2026-10-05", finding.Evidence);
+
+        // Deadlines that advance with the modules are not flagged.
+        Assert.DoesNotContain(New(CourseChecks.Run(Course([Week("Week 1", october), Week("Week 2", october.AddDays(7)), Week("Week 3", october.AddDays(14))]))),
+            f => f.CheckCode == CourseDesignChecks.ModuleDueOutOfOrder);
+
+        // An undated module drops out of the chain rather than breaking it: Week 3 is still compared with Week 1.
+        var afterGap = Week("Week 3", october.AddDays(-14));
+        Assert.Contains(New(CourseChecks.Run(Course([Week("Week 1", october), Week("Week 2", null), afterGap]))),
+            f => f.CheckCode == CourseDesignChecks.ModuleDueOutOfOrder && f.SubjectElementId == afterGap.ElementId);
+
+        // Fewer than two dated modules: nothing to compare.
+        Assert.DoesNotContain(New(CourseChecks.Run(Course([Week("Week 1", october), Week("Week 2", null)]))), f => f.CheckCode == CourseDesignChecks.ModuleDueOutOfOrder);
+
+        // The tolerance lets a module overlap the previous one by a configured number of days.
+        var tolerant = CourseDesignChecks.Rules.Single(r => r.Code == CourseDesignChecks.ModuleDueOutOfOrder).Defaults()
+            with { Numbers = new Dictionary<string, decimal> { [CourseDesignChecks.ToleranceDays] = 10 } };
+        Assert.DoesNotContain(New(CourseChecks.Run(Course([Week("Week 1", october.AddDays(-7)), Week("Week 2", october.AddDays(7)), Week("Week 3", october)]),
+            new CheckProfile(new Dictionary<string, CheckSettings> { [CourseDesignChecks.ModuleDueOutOfOrder] = tolerant }))), f => f.CheckCode == CourseDesignChecks.ModuleDueOutOfOrder);
+    }
+
     [Fact] public void Outcomes_are_checked_for_vague_verbs_assessment_and_cognitive_level()
     {
         var outcomes = new OutcomeEvidence[] { new(Guid.NewGuid(), "C1", "Understand CSS layout", "", 1), new(Guid.NewGuid(), "C2", "Students will be able to explain the box model", "", 0),

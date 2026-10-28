@@ -35,6 +35,19 @@ public static class OversightEndpoints
         foreach (var c in o.CourseRows)
             csv.Row(c.Code, c.Title, c.Department ?? "", c.Program ?? "", c.DeliveryMode ?? "", c.ReadinessLabel, c.OpenSteps?.ToString() ?? "",
                 c.RequiredOpenSteps?.ToString() ?? "", c.LastChecked?.ToString("yyyy-MM-dd HH:mm") ?? "", Date(c.EndorsedAt), Date(c.EndorsementValidUntil));
+        // The WCAG rollup follows the course rows in the same file, under its own header, with every caveat beneath it
+        // so a downloaded figure cannot be circulated as a conformance claim (ADR 018 amendment).
+        csv.Row();
+        csv.Row("Success criterion", "Name", "Level", "Courses with open work", "Open places", "Checks");
+        foreach (var c in o.Conformance)
+            csv.Row(c.Number, c.Name, c.Level, $"{c.CoursesAffected}", $"{c.OpenPlaces}", string.Join(" ", c.Checks));
+        csv.Row();
+        csv.Row("Scope", o.Scope.Description);
+        csv.Row("Courses in scope", $"{o.Courses}");
+        csv.Row("Courses checked", $"{o.CoursesChecked}");
+        csv.Row("Generated (UTC)", o.Scope.GeneratedAt.ToString("u"));
+        foreach (var caveat in o.Scope.Caveats) csv.Row("Caveat", caveat);
+
         var scope = string.Join("-", new[] { o.Department, o.Program }.OfType<string>().Select(Csv.Slug));
         return csv.File($"teachwell-oversight-{(scope.Length == 0 ? "college" : scope)}-{o.Scope.GeneratedAt:yyyy-MM-dd}.csv");
     }

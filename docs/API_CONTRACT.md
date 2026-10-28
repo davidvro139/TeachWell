@@ -176,7 +176,25 @@ See ADR 011.
   - the status is unknown
   - Not applicable has no reason, or a reason is over 500 characters
   - a key is not currently shown by the guide
-- Each guide step also has `resources`: linked published articles (kind, id, title, slug) and upcoming workshops (kind, id, title, start, end, modality, `myStatus`).
+- Each guide step also has `resources`: linked published articles (kind, id, title, slug) and upcoming workshops (kind, id, title, start, end, modality, `myStatus`), and `wcagCriteria`: the success criteria the step's check relates to (number, name, level, reference), empty for checks that relate to none.
+## Syllabus (ADR 019)
+- `GET /courses/{id}/syllabus` (course access; others 404). Returns `source` (`Canvas`, `Pasted` or `None`), the `words` the checks measured, `suppliedAt`/`suppliedByName` for a paste, `importedAt` for a Canvas one, `canEdit` (owner only), a plain-language `note`, and `text` **only for the owner**.
+- `PUT /courses/{id}/syllabus {text}` (owner only; others 404). Stores the pasted syllabus, which the syllabus checks then run against. Plain text and pasted HTML are both accepted and go through the same sanitizer as an import. 400 when the text is empty, holds no words, or exceeds 100,000 characters.
+- `DELETE /courses/{id}/syllabus` (owner only; others 404, and 404 when nothing is pasted). Clears the paste and hands the element back to the importer; the element and its snapshots are retained.
+- A pasted syllabus outranks the importer: re-importing the course neither overwrites it nor marks it removed. The course's improvement guide states a limitation when the course has no syllabus at all, so a gap does not read as a clean syllabus.
+
+- A course's imported elements include its Canvas **syllabus** when it has one (ADR 019): type `syllabus`, a fixed source id, and no module. It is checked like a page and appears in the improvement guide, but it is not reviewable element by element and is not a rubric criterion target.
+- Page and assignment evidence carries `media` from evidence version 2 (ADR 018 amendment): one entry per video or audio player, with its `kind` (Video, Audio or Embed), external `provider` host if any, accessible `title`, and `hasCaptionTrack`. The last is true or false for an HTML player, and **null for an embed**, where the page cannot settle whether the hosted media is captioned. `media` is null, not empty, on snapshots taken before version 2, and the captions checks then report a limitation rather than passing. No `src`, URL or markup is ever stored.
+
+## Accessibility conformance report (ADR 018)
+- `GET /courses/{id}/conformance` (the same course access as the guide, which it projects; others 404, and the Academic administrator role 403). It stores nothing and recomputes nothing: every figure comes from the guide. It returns:
+  - the course, the reference standard (`standard`), `asOf` (when the report was produced) and `contentAsOf` (when the content was captured) — both, because they differ
+  - the standards applied, `checkedItems`, and the latest `endorsement` wording with `endorsedAt` when the course has one
+  - `criteriaInScope`, `criteriaOutOfScope` (how many of the standard's 50 Level A and AA criteria TeachWell has no check for), and counts of criteria by state
+  - `criteria`, in criterion order: number, name, level, reference, `state`, the related `checks`, `checksRan`, `fullyCovered`, and open, done and not-applicable place counts
+  - `caveat` and `limitations`
+- `state` is `Findings` (an open place), `NoFindings` (the checks that ran found nothing) or `NotChecked` (no related check ran, because the standards do not enable one, the course has no content it applies to, or the snapshot lacked the evidence). It is never "pass" or "compliant": an automated check can show an issue was found, never that a criterion is satisfied.
+- `GET /courses/{id}/conformance/export` returns the same report as CSV, one row per criterion, with the scope, both dates, the applied standards, the endorsement and every limitation below the rows.
 - `GET /standards/resources`, `POST /standards/resources {checkCode, articleId | workshopId}`, `DELETE /standards/resources/{linkId}` (CTL role; others 403). These list, link and unlink CTL resources on guide steps. Each returns the full list, with each link's check, kind, title and whether instructors see it. 400 when:
   - the check is unknown
   - both or neither resources are given

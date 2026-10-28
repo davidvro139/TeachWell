@@ -14,7 +14,8 @@ public sealed record GuideStep(string CheckCode, string Aspect, string Severity,
 }
 
 // How much of each kind of thing the course has, so a strength is only claimed where there was something to check.
-public sealed record GuideCoverage(int Pages, int Assessments, int Images, int Links, int Headings, int Tables, int Modules, int Outcomes, int Items);
+// Media is appended (ROADMAP item 5a) so a captions strength is claimed only where the course actually has media.
+public sealed record GuideCoverage(int Pages, int Assessments, int Images, int Links, int Headings, int Tables, int Modules, int Outcomes, int Items, int Media = 0);
 
 // Priority = severity × reach × position × ease. Defaults are TeachWell's; they are deliberately simple so the order can be explained.
 public sealed record GuideWeights(double Low = 1, double Medium = 2, double High = 3, double Critical = 4,
@@ -83,6 +84,13 @@ public static class GuideCatalog
         [DeterministicChecks.ImageAltMissing] = E(3, "Every image has a text alternative or is marked decorative.", c => c.Images > 0),
         [DeterministicChecks.ImageAltFilename] = E(3, "No image uses a file name as its description.", c => c.Images > 0),
         [DeterministicChecks.ImageAltEmpty] = E(2, null, _ => false),
+        // No strength: a keyword match shows a topic is mentioned, not that the policy is good, so claiming the
+        // syllabus "covers everything" on that basis would overstate what the check saw.
+        [SyllabusChecks.RequiredElementsMissing] = E(10, null, _ => false),
+        // Captioning is the slowest accessibility fix in a course, so the estimates are far higher than the text checks'.
+        [MediaChecks.CaptionsMissing] = E(30, "Every video and audio player carries captions.", c => c.Media > 0),
+        // No strength: "nothing to confirm" is not an achievement, and a confirmed step is the instructor's word, not a check's.
+        [MediaChecks.CaptionsUnconfirmed] = E(10, null, _ => false),
         [DeterministicChecks.HeadingEmpty] = E(2, "Every heading has text.", c => c.Headings > 0),
         [DeterministicChecks.HeadingSkipped] = E(3, "Heading levels follow in order.", c => c.Headings > 0),
         [DeterministicChecks.LinkVague] = E(2, "Link text says where each link goes.", c => c.Links > 0),
@@ -111,6 +119,7 @@ public static class GuideCatalog
         [CourseDesignChecks.ModuleNoAssessment] = E(20, "Every module includes an assessment.", c => c.Modules > 0 && c.Assessments > 0),
         [CourseDesignChecks.WorkloadImbalance] = E(45, "Workload is spread evenly across modules.", c => c.Modules >= 3),
         [CourseDesignChecks.DueSameDay] = E(5, "Due dates are spread out.", c => c.Assessments >= 2),
+        [CourseDesignChecks.ModuleDueOutOfOrder] = E(5, "Deadlines advance in module order.", c => c.Assessments >= 2 && c.Modules >= 2),
         [CourseDesignChecks.OutcomeVagueVerb] = E(5, "Outcomes use measurable verbs.", c => c.Outcomes > 0),
         [CourseDesignChecks.OutcomeNotAssessed] = E(10, "Every outcome is assessed.", c => c.Outcomes > 0),
         [CourseDesignChecks.OutcomesLowerOrder] = E(20, "Outcomes reach beyond recall and comprehension.", c => c.Outcomes > 0),

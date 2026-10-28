@@ -41,6 +41,9 @@ public abstract class ReviewCheck
     public virtual IReadOnlyList<CheckParameter> Parameters => [];
     // Default "why / how to fix / example" text; standard sets carry their own editable copy.
     public virtual CheckGuidance Guidance => DefaultGuidance.For(Code);
+    // The WCAG success criteria this check relates to, or empty when it relates to none (ROADMAP item 1). A fact about
+    // the check, not a CTL setting, so it stays out of published standard-set versions.
+    public virtual IReadOnlyList<WcagCriterion> WcagCriteria => Wcag.For(Code);
     // Findings are ordered by Stage, then Position (where in the document), then registry order, which keeps
     // proposals in reading order rather than grouped by check.
     public abstract int Stage { get; }

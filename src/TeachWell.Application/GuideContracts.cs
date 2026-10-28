@@ -11,7 +11,7 @@ public record CourseGuideDto(Guid CourseId, string CourseTitle, AppliedStandards
 public record GuideAspectDto(string Aspect, string Label, string Why, int OpenSteps, int RequiredSteps, int OpenPlaces);
 public record GuideStepDto(string CheckCode, string Name, string Aspect, string Severity, bool Required, bool QuickWin, int Rank,
     int MinutesEach, int OpenMinutes, int OpenPlaces, int TotalPlaces, int Items, string Suggestion, CheckGuidance Guidance, IReadOnlyList<GuideLocationDto> Locations,
-    bool ConfirmedByReviewer, IReadOnlyList<GuideResourceDto> Resources);
+    bool ConfirmedByReviewer, IReadOnlyList<GuideResourceDto> Resources, IReadOnlyList<WcagCriterion> WcagCriteria);
 // A CTL resource linked to the step's check: a published article (Kind "Article", with Slug) or an upcoming workshop (Kind "Workshop",
 // with its times, modality and the viewer's registration status, if any).
 public record GuideResourceDto(string Kind, Guid Id, string Title, string? Slug, DateTime? StartsAt, DateTime? EndsAt, string? Modality, string? MyStatus);

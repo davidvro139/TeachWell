@@ -3,7 +3,9 @@ using TeachWell.Domain;
 namespace TeachWell.Application;
 
 public record CheckParameterDto(string Key, string Label, string Kind, decimal? DefaultNumber, IReadOnlyList<string>? DefaultWords, decimal? Min, decimal? Max, int MaxItems, int MaxItemLength);
-public record CheckCatalogEntryDto(string Code, string Name, string Aspect, string Target, string DefaultSeverity, IReadOnlyList<CheckParameterDto> Parameters, CheckGuidance DefaultGuidance);
+// WcagCriteria is empty for checks that relate to no success criterion (course design, workload, alignment).
+public record CheckCatalogEntryDto(string Code, string Name, string Aspect, string Target, string DefaultSeverity, IReadOnlyList<CheckParameterDto> Parameters, CheckGuidance DefaultGuidance,
+    IReadOnlyList<WcagCriterion> WcagCriteria);
 
 public record StandardSetVersionSummaryDto(Guid Id, int VersionNumber, string Status, DateTime CreatedAt, DateTime? PublishedAt, int EnabledChecks, int RequiredChecks);
 public record StandardSetDto(Guid Id, string Name, string? DeliveryMode, string? Department, string Scope, IReadOnlyList<StandardSetVersionSummaryDto> Versions);

@@ -48,6 +48,14 @@ public class CourseElement
     // Allowlisted re-serialization of the sanitized HTML (see CanvasText.Preview); never the original markup.
     public string? PreviewHtml { get; set; }
     public int Position { get; set; }
+    // Content a person supplied here rather than TeachWell importing it from Canvas (ADR 019 amendment). The college's
+    // syllabi live in Simple Syllabus, an LTI tool whose content is not in Canvas exports or the Canvas API (ADR 008),
+    // so the course owner pastes the syllabus text, exactly as they already paste learning outcomes.
+    //
+    // Supplied content outranks an import: Apply leaves such an element alone and does not mark it removed when the
+    // source stops returning it. Clearing SuppliedAt hands the element back to the importer.
+    public DateTime? SuppliedAt { get; set; }
+    public Guid? SuppliedBy { get; set; }
     public List<ElementSnapshot> Snapshots { get; set; } = [];
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

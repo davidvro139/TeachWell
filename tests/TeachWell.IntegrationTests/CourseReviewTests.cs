@@ -57,7 +57,8 @@ public class CourseReviewTests
         Assert.Equal(HttpStatusCode.BadRequest, (await ctl.PostAsJsonAsync($"/api/v1/elements/{review.ElementId}/reviews", new { rubricVersionId = courseRubric })).StatusCode);
         var detail = await owner.GetFromJsonAsync<JsonElement>($"/api/v1/courses/{SharedCourse}");
         Assert.DoesNotContain(detail.GetProperty("elements").EnumerateArray(), e => e.GetProperty("type").GetString() == "course");
-        Assert.Equal(3, (await owner.GetFromJsonAsync<CourseSummary[]>("/api/v1/courses?role=Instructor"))!.Single(c => c.Id == Guid.Parse(SharedCourse)).ElementCount);
+        // Module, page, assignment and syllabus; the synthetic course element is still excluded.
+        Assert.Equal(4, (await owner.GetFromJsonAsync<CourseSummary[]>("/api/v1/courses?role=Instructor"))!.Single(c => c.Id == Guid.Parse(SharedCourse)).ElementCount);
 
         review = await ReviewTests.Ok(await ctl.PostAsJsonAsync($"/api/v1/reviews/{review.Id}/audit", new { revision = review.Revision }));
         Assert.Equal(new HashSet<string?> { CourseChecks.DueDateMissing, CourseChecks.CompetenciesMissing }, review.Findings.Select(x => x.CheckCode).ToHashSet());

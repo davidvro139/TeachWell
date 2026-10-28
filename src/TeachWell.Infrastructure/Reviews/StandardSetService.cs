@@ -17,7 +17,7 @@ public sealed class StandardSetService(AppDbContext db, InstitutionSettings? ins
 
     public IReadOnlyList<CheckCatalogEntryDto> Catalog() => CheckRegistry.All.Select(c => new CheckCatalogEntryDto(c.Code, c.Name, c.Aspect, c.Target.ToString(), c.DefaultSeverity,
         c.Parameters.Select(p => new CheckParameterDto(p.Key, p.Label, p.Kind.ToString(), p.DefaultNumber, p.DefaultWords, p.Min, p.Max, p.MaxItems, p.MaxItemLength)).ToList(),
-        c.Guidance)).ToList();
+        c.Guidance, c.WcagCriteria)).ToList();
 
     public async Task<IReadOnlyList<StandardSetDto>> ListAsync(CurrentUser user, CancellationToken ct)
     {
@@ -161,7 +161,7 @@ public sealed class StandardSetService(AppDbContext db, InstitutionSettings? ins
         var proposedProfile = StandardSetContent.ToProfile(proposedChecks);
 
         // Latest snapshot of every live page and assignment, plus the course structure as it is now (built, not saved).
-        var elements = await db.Elements.AsNoTracking().Where(e => e.CourseId == courseId && ReviewVocabulary.ElementTypes.Contains(e.Type) && e.SourceStatus != "Removed")
+        var elements = await db.Elements.AsNoTracking().Where(e => e.CourseId == courseId && ReviewVocabulary.CheckedTypes.Contains(e.Type) && e.SourceStatus != "Removed")
             .Select(e => new { e.Id, e.Type }).ToListAsync(ct);
         var ids = elements.Select(e => e.Id).ToList();
         var snapshots = (await db.ElementSnapshots.AsNoTracking().Where(s => ids.Contains(s.ElementId)).ToListAsync(ct))

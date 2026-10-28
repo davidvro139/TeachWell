@@ -6,10 +6,18 @@ public record OversightDto(ReportScope Scope, string? Department, IReadOnlyList<
     IReadOnlyList<ReadinessStateCountDto> Readiness, IReadOnlyList<AspectIssuesDto> IssuesByAspect, IReadOnlyList<CheckIssuesDto> TopChecks,
     GuideHelpDto HelpRequests, IReadOnlyList<ProgressPointDto> Progress, IReadOnlyList<OversightCourseDto> CourseRows,
     IReadOnlyList<OversightEndorsementDto> Endorsements, bool CanRefresh, string? Program, IReadOnlyList<string> Programs,
-    int AutoRecheckHours, DateTime? LastAutomaticRecheck);
+    int AutoRecheckHours, DateTime? LastAutomaticRecheck, IReadOnlyList<ConformanceRollupDto> Conformance);
 public record ReadinessStateCountDto(string State, string Label, int Courses);
 public record AspectIssuesDto(string Aspect, string Label, int OpenPlaces, int CoursesAffected);
 public record CheckIssuesDto(string CheckCode, string Name, string Aspect, int CoursesAffected, int OpenPlaces);
+// Open accessibility work rolled up to WCAG success criteria across the courses in scope (ADR 018 amendment).
+//
+// It reports where work is outstanding, and deliberately cannot report the opposite. Guide records store only the open
+// places per check, so a course with none for a criterion is indistinguishable from one where that criterion's checks
+// never ran. CoursesAffected is therefore a floor on the work, never a count of courses that satisfy the criterion —
+// the per-course conformance report is the view that draws that distinction.
+public record ConformanceRollupDto(string Number, string Name, string Level, string Reference, IReadOnlyList<string> Checks,
+    int CoursesAffected, int OpenPlaces);
 public record GuideHelpDto(int Total, int Open, IReadOnlyList<CategoryCountDto> ByCategory);
 public record CategoryCountDto(string Category, int Count);
 // Totals across courses using each course's latest guide record on or before the week's end.

@@ -216,7 +216,8 @@ public class StandardSetTests
         draft = await Ok<StandardSetVersionDto>(await Save(ctl, draft, Change(draft, DeterministicChecks.ImageAltMissing, c => c with { Enabled = false })));
 
         var preview = await Ok<StandardsPreviewDto>(await ctl.PostAsJsonAsync($"/api/v1/standard-sets/{draft.SetId}/versions/{draft.Id}/preview", new { courseId = SharedCourse }));
-        Assert.Equal(("College-wide course standards (demo)", 2), (preview.Current.Name, preview.ElementsChecked));
+        // Page, assignment and syllabus: the syllabus gets the element checks too (ADR 019).
+        Assert.Equal(("College-wide course standards (demo)", 3), (preview.Current.Name, preview.ElementsChecked));
         var alt = preview.Rows.Single(r => r.Code == DeterministicChecks.ImageAltMissing);
         Assert.True(alt.Current > 0);
         Assert.Equal((false, 0), (alt.Enabled, alt.Proposed));

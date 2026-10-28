@@ -45,6 +45,15 @@ interface Step {
   locations: Place[];
   confirmedByReviewer: boolean;
   resources: Resource[];
+  wcagCriteria: WcagCriterion[];
+}
+// The WCAG success criteria this step's check relates to (ADR 018). Empty for checks that relate to none, such as
+// workload or alignment, so the guide must not imply every step is an accessibility requirement.
+interface WcagCriterion {
+  number: string;
+  name: string;
+  level: string;
+  reference: string;
 }
 interface Resource {
   kind: "Article" | "Workshop";
@@ -456,6 +465,12 @@ function StepView({
           {why.reference && (
             <p className="guide-reference">
               Based on: <Glossed text={why.reference} />
+            </p>
+          )}
+          {/* Only accessibility checks carry criteria (ADR 018); Glossed links WCAG to its plain-language entry. */}
+          {step.wcagCriteria.length > 0 && (
+            <p className="guide-reference">
+              Relates to: <Glossed text={step.wcagCriteria.map((c) => c.reference).join("; ")} />
             </p>
           )}
           <h4>How to fix it</h4>

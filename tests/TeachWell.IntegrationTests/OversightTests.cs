@@ -132,10 +132,15 @@ public class OversightTests
         Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
         var lines = System.Text.Encoding.UTF8.GetString(bytes[3..]).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
         Assert.StartsWith("Course code,Course title,Department,Program", lines[0]);
-        Assert.Equal(2, lines.Length);
+        // Exactly one course row in a filtered export: the WCAG rollup's own header follows immediately (ADR 018
+        // amendment). Asserted this way rather than by total line count, which the rollup and caveats also change.
         Assert.StartsWith("WEB 101,\"'=HYPERLINK(", lines[1]);
+        Assert.StartsWith("Success criterion,", lines[2]);
         Assert.Contains("Web Development AAS", lines[1]);
         Assert.DoesNotContain("Alex Morgan", lines[1]);
+        // One row per mapped criterion, then the scope and its caveats.
+        Assert.Equal(TeachWell.Domain.Wcag.Criteria.Count, lines.Skip(3).TakeWhile(l => !l.StartsWith("Scope,")).Count());
+        Assert.Contains(lines, l => l.StartsWith("Generated (UTC),"));
         Assert.Equal(HttpStatusCode.Forbidden, (await owner.GetAsync("/api/v1/oversight/export")).StatusCode);
     }
 

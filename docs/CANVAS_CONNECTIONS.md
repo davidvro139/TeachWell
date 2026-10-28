@@ -23,7 +23,7 @@ Use **Disconnect** to remove TeachWell's saved credential. This does not revoke 
 ## Import a course
 
 1. On a connected site's card, select **List available courses**. Only courses whose returned current-user enrollment explicitly reports active teacher status are supported.
-2. Select **Import course**. TeachWell reads modules, pages, assignments and module placements, then saves a private local copy. Unsupported items and unavailable page bodies are labeled with warnings.
+2. Select **Import course**. TeachWell reads modules, pages, assignments, module placements and the course syllabus, then saves a private local copy. Unsupported items and unavailable page bodies are labeled with warnings.
 3. Select **Courses** to open the imported copy, source links and publication/availability labels. No rich HTML, embedded scripts, files or external URLs are fetched/rendered.
 4. Import the same source course again to refresh it. The local course ID, element IDs and explicit shares are preserved. Changed content adds snapshots; missing items are marked Removed. A failed refresh leaves the prior course copy intact.
 

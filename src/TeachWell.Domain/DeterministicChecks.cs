@@ -16,7 +16,7 @@ public static partial class DeterministicChecks
 
     public static readonly IReadOnlyList<ElementCheck> Rules =
         [new Unavailable(), new Unpublished(), new AltMissing(), new AltFilename(), new AltEmpty(), new EmptyHeading(), new SkippedHeading(),
-         new EmptyLink(), new VagueLink(), new MissingTableHeaders(), new MissingRubric(), .. ContentChecks.Rules];
+         new EmptyLink(), new VagueLink(), new MissingTableHeaders(), new MissingRubric(), .. MediaChecks.Rules, .. SyllabusChecks.Rules, .. ContentChecks.Rules];
     // Every check code a rubric criterion may reference, element and course.
     public static readonly string[] All = [.. Rules.Select(r => r.Code), .. CourseChecks.All];
 

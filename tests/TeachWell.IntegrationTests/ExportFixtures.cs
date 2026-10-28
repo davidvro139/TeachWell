@@ -8,7 +8,10 @@ public sealed class ExportFixture
     public string Title = "Teaching Statistics with Real Data";
     public string Code = "STAT 110";
     public string WelcomeBody = "<h2>Welcome</h2><p>This fictional course uses open datasets.</p><img src=\"$IMS-CC-FILEBASE$/banner.png\" alt=\"banner.png\">";
+    // A wiki page that happens to be called "Syllabus". Distinct from CourseSyllabusBody below, which is the Canvas
+    // course syllabus: a property of the course, exported to course_settings/syllabus.html.
     public bool IncludeSyllabusPage = true;
+    public string? CourseSyllabusBody;
     // Adds a complete classic quiz (a survey with two questions) and a module text header.
     public bool IncludeImportableQuiz;
     // Adds a graded discussion, an announcement, an external-tool assignment and a New Quiz.
@@ -117,6 +120,7 @@ public sealed class ExportFixture
         // Course files are listed, never opened.
         files["web_resources/banner.png"] = "not really a png";
         if (IncludeSyllabusPage) files["wiki_content/syllabus.html"] = "<html><head><title>Syllabus</title><meta name=\"workflow_state\" content=\"unpublished\"/></head><body><p>Draft syllabus.</p></body></html>";
+        if (CourseSyllabusBody is not null) files["course_settings/syllabus.html"] = CourseSyllabusBody;
         return Zip(files.Select(f => (f.Key, Encoding.UTF8.GetBytes(f.Value))).Concat(Extra.Select(e => (e.Key, e.Value))));
     }
 

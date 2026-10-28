@@ -33,6 +33,9 @@ public static class CourseDataApplier
         foreach (var source in data.Elements)
         {
             var element = bySource[(source.Type, source.Id)]; seen.Add((source.Type, source.Id));
+            // Content a person supplied wins over the import: the owner said "this is my syllabus", and an import that
+            // reaches the same element (an all-but-empty Canvas syllabus page, say) must not overwrite it (ADR 019).
+            if (element.SuppliedAt is not null) continue;
             element.Title = source.Title; element.PlainText = source.PlainText; element.SourceUrl = source.SourceUrl;
             element.SourceStatus = source.Status; element.SourceWarning = source.Warning; element.Position = source.Position;
             element.EvidenceJson = source.Evidence?.Serialize(); element.PreviewHtml = source.PreviewHtml;
@@ -41,8 +44,9 @@ public static class CourseDataApplier
             CaptureIfChanged(element, now);
         }
         var warnings = data.Warnings.ToList();
-        // The synthetic course-structure element is TeachWell's own, never returned by a source, so it is not "missing".
-        foreach (var missing in course.Elements.Where(e => e.Type != ReviewVocabulary.CourseType && !seen.Contains((e.Type, e.SourceElementId))))
+        // Neither the synthetic course-structure element nor content a person supplied is "missing" when an import does
+        // not return it: the first is TeachWell's own, and the second was never expected from Canvas (ADR 019).
+        foreach (var missing in course.Elements.Where(e => e.Type != ReviewVocabulary.CourseType && e.SuppliedAt is null && !seen.Contains((e.Type, e.SourceElementId))))
         {
             missing.SourceStatus = "Removed";
             missing.SourceWarning = "This item was not returned by the latest completed import. Earlier snapshots are retained.";

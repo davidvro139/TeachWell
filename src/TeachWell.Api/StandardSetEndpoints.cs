@@ -39,5 +39,37 @@ public static class StandardSetEndpoints
         // The instructor's "Start here" checklist: their own courses only (ADR 016).
         read.MapGet("/getting-started", async (IGuideService s, Actor u, CancellationToken ct) => Results.Ok(await s.GettingStartedAsync(u.User, ct)));
         read.MapPut("/courses/{id:guid}/guide/progress", (Guid id, GuideProgressInput input, IGuideService s, Actor u, CancellationToken ct) => ReviewEndpoints.Run(() => s.MarkAsync(u.User, id, input, ct)));
+        // The syllabus. Anyone with course access reads it; only the owner pastes or clears it (others 404), as with
+        // the guide's progress marks. Pasting exists because this college's syllabi are in Simple Syllabus (ADR 019).
+        read.MapGet("/courses/{id:guid}/syllabus", (Guid id, ISyllabusService s, Actor u, CancellationToken ct) => ReviewEndpoints.Run(() => s.GetAsync(u.User, id, ct)));
+        read.MapPut("/courses/{id:guid}/syllabus", (Guid id, SyllabusTextInput input, ISyllabusService s, Actor u, CancellationToken ct) => ReviewEndpoints.Run(() => s.SaveAsync(u.User, id, input, ct)));
+        read.MapDelete("/courses/{id:guid}/syllabus", (Guid id, ISyllabusService s, Actor u, CancellationToken ct) => ReviewEndpoints.Run(() => s.ClearAsync(u.User, id, ct)));
+
+        // The accessibility conformance report: the same course access as the guide, which it is a projection of (ROADMAP item 1).
+        read.MapGet("/courses/{id:guid}/conformance", (Guid id, IConformanceService s, Actor u, CancellationToken ct) => ReviewEndpoints.Run(() => s.GetAsync(u.User, id, ct)));
+        read.MapGet("/courses/{id:guid}/conformance/export", async (Guid id, IConformanceService s, Actor u, CancellationToken ct) =>
+            await s.GetAsync(u.User, id, ct) is { Status: ResultStatus.Ok, Value: { } r } ? ConformanceCsv(r) : Results.NotFound());
+    }
+
+    // One row per success criterion, with the report's scope and date in the header rows so a downloaded file cannot
+    // be read as a bare compliance claim.
+    private static IResult ConformanceCsv(CourseConformanceDto r)
+    {
+        var csv = new Csv("Criterion", "Name", "Level", "State", "Checks related", "Checks that ran", "Fully covered", "Open", "Fixed", "Not applicable");
+        foreach (var c in r.Criteria)
+            csv.Row(c.Number, c.Name, c.Level, c.State, $"{c.Checks.Count}", $"{c.ChecksRan}", c.FullyCovered ? "Yes" : "No",
+                $"{c.OpenPlaces}", $"{c.DonePlaces}", $"{c.NotApplicablePlaces}");
+        csv.Row();
+        csv.Row("Course", $"{r.CourseCode} {r.CourseTitle}");
+        csv.Row("Reference standard", r.Standard);
+        csv.Row("Criteria in scope", $"{r.CriteriaInScope}");
+        csv.Row("Criteria needing manual review", $"{r.CriteriaOutOfScope}");
+        csv.Row("Standards applied", $"{r.Standards.Name}{(r.Standards.VersionNumber is { } v ? $" v{v}" : "")}");
+        csv.Row("Content captured", r.ContentAsOf?.ToString("u") ?? "not recorded");
+        csv.Row("Report generated", r.AsOf.ToString("u"));
+        if (r.Endorsement is not null) csv.Row("Endorsement", r.Endorsement);
+        csv.Row("Scope", Conformance.Caveat);
+        foreach (var limitation in r.Limitations) csv.Row("Limitation", limitation);
+        return csv.File($"conformance-{Csv.Slug(r.CourseCode)}.csv");
     }
 }

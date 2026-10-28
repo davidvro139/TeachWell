@@ -52,7 +52,7 @@ public sealed record CourseStructureEvidence(int Version, string Kind, IReadOnly
         text.Append($"Course competencies defined: {Competencies}");
         return text.ToString();
     }
-    public static string Label(string type) => type switch { "page" => "Page", "assignment" => "Assignment", ReviewVocabulary.QuizType => "Quiz", ReviewVocabulary.DiscussionType => "Discussion", "moduleItem" => "Module item", _ => type };
+    public static string Label(string type) => type switch { "page" => "Page", "assignment" => "Assignment", ReviewVocabulary.QuizType => "Quiz", ReviewVocabulary.DiscussionType => "Discussion", "moduleItem" => "Module item", ReviewVocabulary.SyllabusType => "Syllabus", _ => type };
 }
 public sealed record ModuleEvidence(Guid ElementId, string Title, string Status, int Position, IReadOnlyList<CourseItemEvidence> Items);
 // ElementId is the page/assignment a module item points to, or the module item itself when its target was not imported.

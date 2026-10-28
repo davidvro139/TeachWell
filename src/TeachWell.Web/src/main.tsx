@@ -50,6 +50,7 @@ import { Support } from "./Support";
 import { TicketWorkspace } from "./TicketWorkspace";
 import { CourseReports } from "./CourseReports";
 import { CourseGuide } from "./CourseGuide";
+import { SyllabusPaste } from "./SyllabusPaste";
 import { CourseReadiness } from "./CourseReadiness";
 import { ReadinessQueue } from "./ReadinessQueue";
 import { Reports } from "./Reports";
@@ -125,6 +126,8 @@ function App() {
     [courses, setCourses] = useState<Course[]>([]);
   // Guide, readiness, reviews, tasks and reports on a course page are for the people who teach and review it.
   const courseTools = role === "Instructor" || role === "CTLReviewer";
+  // Saving or removing a pasted syllabus changes what the improvement guide finds, so the guide is rebuilt (ADR 019).
+  const [guideKey, setGuideKey] = useState(0);
   const [detail, setDetail] = useState<CourseDetail | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -680,7 +683,15 @@ function App() {
                   ...(courseTools ? [{ id: "course-standards", label: "Course standards" }] : []),
                 ]}
               />
-              {courseTools && <CourseGuide key={`${detail.id}-${role}-guide`} course={detail} onSessionExpired={reportError} onOpenReview={setReviewId} onOpenTask={setTaskId} onProgress={() => setReadinessKey((x) => x + 1)} />}
+              {courseTools && (
+                <SyllabusPaste
+                  key={`${detail.id}-${role}-${guideKey}-syllabus`}
+                  courseId={detail.id}
+                  onSessionExpired={reportError}
+                  onSaved={() => setGuideKey((x) => x + 1)}
+                />
+              )}
+              {courseTools && <CourseGuide key={`${detail.id}-${role}-${guideKey}-guide`} course={detail} onSessionExpired={reportError} onOpenReview={setReviewId} onOpenTask={setTaskId} onProgress={() => setReadinessKey((x) => x + 1)} />}
               {courseTools && (
                 <CourseTasks
                   key={`${detail.id}-${role}-${tasksKey}`}

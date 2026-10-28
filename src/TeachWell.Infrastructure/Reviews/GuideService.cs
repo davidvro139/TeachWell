@@ -66,7 +66,7 @@ public sealed class GuideService(AppDbContext db, InstitutionSettings? instituti
 
         var elements = await db.Elements.AsNoTracking().Where(e => e.CourseId == course.Id && e.Type != ReviewVocabulary.CourseType && e.SourceStatus != "Removed").ToListAsync(ct);
         var byId = elements.ToDictionary(e => e.Id);
-        var content = elements.Where(e => ReviewVocabulary.ElementTypes.Contains(e.Type)).ToList();
+        var content = elements.Where(e => ReviewVocabulary.CheckedTypes.Contains(e.Type)).ToList();
         var contentIds = content.Select(e => e.Id).ToList();
         // Only the latest snapshot of each item is loaded.
         var latestIds = await db.ElementSnapshots.AsNoTracking().Where(s => contentIds.Contains(s.ElementId)).GroupBy(s => s.ElementId)
@@ -103,13 +103,15 @@ public sealed class GuideService(AppDbContext db, InstitutionSettings? instituti
         var issues = new List<GuideIssue>();
         var places = new Dictionary<string, Place>();
         var limitations = new HashSet<string>();
-        int pages = 0, images = 0, links = 0, headings = 0, tables = 0;
+        int pages = 0, images = 0, links = 0, headings = 0, tables = 0, media = 0;
         foreach (var e in content)
         {
             if (!snapshots.TryGetValue(e.Id, out var s)) continue;
             var evidence = ContentEvidence.Parse(s.EvidenceJson);
             if (e.Type == "page") pages++;
             images += evidence?.Images.Count ?? 0; links += evidence?.Links.Count ?? 0; headings += evidence?.Headings.Count ?? 0; tables += evidence?.Tables.Count ?? 0;
+            // Only recognised players count toward media coverage: an embedded tool is not evidence about captions.
+            media += evidence?.Media?.Count(m => MediaKinds.IsPlayer(m.Kind)) ?? 0;
             var report = ReviewEngine.RunElement(e.Type, s.SourceStatus, evidence, profile, s.PlainText);
             if (report.Limitations.Count > 0) limitations.Add("Some items could not be fully checked (for example, items imported before evidence capture). Re-import the course to check everything.");
             foreach (var f in report.Findings)
@@ -157,12 +159,17 @@ public sealed class GuideService(AppDbContext db, InstitutionSettings? instituti
             return new GuideStepDto(s.CheckCode, check.Name, s.Aspect, s.Severity, s.Required, s.QuickWin, rank + 1, s.MinutesEach, s.OpenMinutes, s.OpenCount, s.Issues.Count,
                 s.Issues.Select(i => i.ElementId?.ToString() ?? i.Key).Distinct().Count(), first.Finding.Recommendation,
                 guidance.GetValueOrDefault(s.CheckCode) ?? check.Guidance, locations, locations.Any(l => l.ConfirmedBy is not null && l.Status == GuideVocabulary.Open),
-                resources.GetValueOrDefault(s.CheckCode) ?? []);
+                resources.GetValueOrDefault(s.CheckCode) ?? [], check.WcagCriteria);
         }).ToList();
 
         var assessments = structure.AllItems().Where(i => i.IsAssessed).Select(i => i.ElementId).Distinct().Count();
-        var coverage = new GuideCoverage(pages, assessments, images, links, headings, tables, structure.Modules.Count, structure.Competencies, snapshots.Count);
+        var coverage = new GuideCoverage(pages, assessments, images, links, headings, tables, structure.Modules.Count, structure.Competencies, snapshots.Count, media);
         var enabled = CheckRegistry.All.Where(c => profile.For(c).Enabled).Select(c => c.Code);
+        // A course with no syllabus produces no syllabus findings, which would otherwise read as a clean syllabus.
+        // This college's syllabi are in Simple Syllabus, an LTI tool outside Canvas (ADR 008), so a missing syllabus
+        // is the normal case here and has to say so, with the way to fix it (ADR 019).
+        if (enabled.Contains(SyllabusChecks.RequiredElementsMissing) && !content.Any(e => e.Type == ReviewVocabulary.SyllabusType))
+            limitations.Add("This course has no syllabus in TeachWell, so the syllabus was not checked. If the syllabus is in Simple Syllabus or another tool outside Canvas, paste its text on the course page.");
         var strengths = ImprovementGuide.Strengths(enabled, issues.Select(i => i.Finding.CheckCode), coverage)
             .Select(x => new GuideStrengthDto(x.CheckCode, x.Aspect, x.Statement)).ToList();
         var aspects = ReviewAspects.All.Select(a =>
