@@ -102,6 +102,51 @@ test("course listing/import failure, success and safe imported-content browsing 
           hasQualifyingReview: false,
         },
       });
+    // The course page asks for the syllabus (ADR 019). Without this the catch-all below answers with the course
+    // list, which is not a syllabus at all; the panel is defensive about that, but the fixture should still model
+    // what the API really returns.
+    if (path === `/api/v1/courses/${courseId}/syllabus`)
+      return route.fulfill({
+        json: {
+          courseId,
+          source: "None",
+          words: 0,
+          text: null,
+          suppliedAt: null,
+          suppliedByName: null,
+          importedAt: null,
+          canEdit: true,
+          note: "Fixture: this course has no syllabus.",
+        },
+      });
+    // The course page also asks for the conformance report (ADR 018). The panel is defensive about a wrong body,
+    // but the fixture should model what the API really returns.
+    if (path === `/api/v1/courses/${courseId}/conformance`)
+      return route.fulfill({
+        json: {
+          courseId,
+          courseTitle: "Fictional imported course",
+          courseCode: "TEST 42",
+          standard: "WCAG 2.1",
+          asOf: new Date().toISOString(),
+          contentAsOf: null,
+          standards: { name: "TeachWell built-in defaults", versionNumber: null },
+          checkedItems: 0,
+          criteriaInScope: 0,
+          criteriaOutOfScope: 50,
+          criteriaWithFindings: 0,
+          criteriaWithNoFindings: 0,
+          criteriaNotChecked: 0,
+          openPlaces: 0,
+          donePlaces: 0,
+          notApplicablePlaces: 0,
+          criteria: [],
+          endorsement: null,
+          endorsedAt: null,
+          caveat: "Fixture caveat.",
+          limitations: [],
+        },
+      });
     if (path === `/api/v1/courses/${courseId}/guide`)
       return route.fulfill({
         json: {

@@ -89,6 +89,7 @@ builder.Services.AddScoped<ICompetencyService, TeachWell.Infrastructure.Reports.
 builder.Services.AddScoped<IReportService, TeachWell.Infrastructure.Reports.ReportService>();
 builder.Services.AddScoped<IConformanceService, TeachWell.Infrastructure.Reports.ConformanceService>();
 builder.Services.AddScoped<ISyllabusService, TeachWell.Infrastructure.SyllabusService>();
+builder.Services.AddScoped<IAllyCheckService, TeachWell.Infrastructure.Ally.AllyCheckService>();
 builder.Services.AddSingleton<CanvasIntegrationOptions>();
 builder.Services.AddSingleton<InstitutionSettings>();
 builder.Services.AddSingleton<CourseExportOptions>();
@@ -155,6 +156,7 @@ api.MapSupport();
 api.MapAlignment();
 api.MapReadiness();
 api.MapOversight();
+api.MapAlly();
 api.MapGet("/auth/csrf", (HttpContext c, IAntiforgery csrf) => Results.Ok(new { token = csrf.GetAndStoreTokens(c).RequestToken }));
 api.MapPost("/auth/login", async (LoginRequest input, SignInManager<AppUser> signIn, UserManager<AppUser> users) => {
     // The public demo offers one-click sign-in only, so nobody can lock the shared personas out with wrong passwords.

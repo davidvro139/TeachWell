@@ -51,6 +51,8 @@ import { TicketWorkspace } from "./TicketWorkspace";
 import { CourseReports } from "./CourseReports";
 import { CourseGuide } from "./CourseGuide";
 import { SyllabusPaste } from "./SyllabusPaste";
+import { CourseConformance } from "./CourseConformance";
+import { AllyReportCheck } from "./AllyReportCheck";
 import { CourseReadiness } from "./CourseReadiness";
 import { ReadinessQueue } from "./ReadinessQueue";
 import { Reports } from "./Reports";
@@ -628,7 +630,10 @@ function App() {
           ) : view === "rubrics" && role === "CTLReviewer" ? (
             <Rubrics onSessionExpired={reportError} />
           ) : view === "standards" && role === "CTLReviewer" ? (
-            <Standards onSessionExpired={reportError} />
+            <>
+              <Standards onSessionExpired={reportError} />
+              {!publicDemo && <AllyReportCheck onSessionExpired={reportError} />}
+            </>
           ) : (view === "oversight" && role === "CTLReviewer") || (role === "AcademicAdmin" && !detail) ? (
             <Oversight
               key={role}
@@ -692,6 +697,13 @@ function App() {
                 />
               )}
               {courseTools && <CourseGuide key={`${detail.id}-${role}-${guideKey}-guide`} course={detail} onSessionExpired={reportError} onOpenReview={setReviewId} onOpenTask={setTaskId} onProgress={() => setReadinessKey((x) => x + 1)} />}
+              {courseTools && (
+                <CourseConformance
+                  key={`${detail.id}-${role}-${guideKey}-conformance`}
+                  courseId={detail.id}
+                  onSessionExpired={reportError}
+                />
+              )}
               {courseTools && (
                 <CourseTasks
                   key={`${detail.id}-${role}-${tasksKey}`}

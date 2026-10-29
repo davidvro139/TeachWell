@@ -110,8 +110,8 @@ This brings the catalogue to 39 checks.
 
 - **The mapping is not versioned.** Correcting it changes how past reports read. This is intended, but it is the one place in the review framework where a later edit affects an earlier assessment, and it is called out here so that is a decision rather than an oversight.
 - **Five criteria out of fifty.** The report covers what TeachWell's checks relate to. It is a record of remediation work, not a conformance audit, and the caveat says so wherever it appears.
-- **No report screen yet**, so the report itself is not yet visible to the people it was built for. The criterion does already appear on each guide step, which is the part instructors see.
-- **The SPA changes are untested** on this machine, for the reason given above.
+- ~~**No report screen yet**~~ **Built October 29, 2026 — see the amendment below.**
+- ~~**The SPA changes are untested**~~ Node is now installed under `.local`; `tsc`, the production build and the Playwright suite all run.
 
 ## Amendment: media capture and captions — October 28, 2026
 
@@ -236,3 +236,30 @@ This brings the catalogue to 43 checks.
 - SQLite suite: 292 passed, 0 failed (290 before this amendment; 2 new). No migration.
 - A module whose only content is a recording is flagged, naming its player count and word count; the same module with a summary page is not; **a text-only module is not flagged**, which is the assertion that pins the asymmetry; and the word threshold is the CTL's to change.
 - A snapshot without media counts reports the "start a new course review" limitation and flags nothing, rather than treating null as zero and flagging every module with text in it.
+
+
+## Amendment: the report screen, and why it loads lazily — October 29, 2026
+
+`CourseConformance.tsx`, on the course page below the improvement guide. Criterion rows with level, state and open/fixed/set-aside counts; the scope caveat above the figures; both dates; the standards applied; the endorsement; the limitations; and the CSV download.
+
+The states are worded as what was found, never as a verdict: **Work outstanding**, **Nothing found**, **Not checked**. A partially covered criterion says so inline ("Only 1 of 4 related checks ran, so this is partial"), so a clean-looking row cannot be mistaken for full coverage.
+
+### The section is collapsed by default, and that is a correctness decision as much as a performance one
+
+The report is a projection of the improvement guide, so asking for it **re-runs the whole guide server-side**: the course structure is rebuilt, all 43 checks run over every element, and a guide record is written. Mounting it alongside the guide therefore made every course page do the guide's work twice.
+
+That was measured, not theorised: the browser suite went from 3.5 minutes to 9.2 and three unrelated specs began timing out. The property that makes the report trustworthy — that it never computes anything of its own — is exactly what makes it expensive to ask for.
+
+So the section is folded by default and fetches the first time someone opens it. `Collapsible` gained an optional `onOpen` callback for this, documented as "lets a section whose contents are expensive to produce fetch them only once someone actually looks". It keeps its children mounted under `hidden`, so an inner component could not have fetched on mount instead.
+
+With the fix the suite runs in 2.8 minutes, below the original baseline.
+
+### Two defects the browser suite caught that the unit tests could not
+
+- **An unguarded render could blank the course page.** The component rendered the API response without checking its shape, and React unmounts the whole subtree when a render throws. Any unexpected body — a proxy error page, an older API — would have taken out the entire course page, not just this panel. The response shape is now validated once on arrival and anything else is treated as nothing to show.
+- **`.table-scroll` only scrolled inside `.guide-feedback`.** The conformance table uses that wrapper on the course page, outside that container, so it widened the document at phone width. `large-course.spec.ts` caught it at 390px. The rule is now global, which also fixes the oversight rollup.
+
+### Verification
+
+- `e2e/syllabus.spec.ts` covers the criterion line on a guide step (present on an accessibility step, absent on a design step) and the oversight rollup, including that its caveat renders before any figure and that the same rows reach the CSV.
+- Browser suite: 25 passed, 0 failed.

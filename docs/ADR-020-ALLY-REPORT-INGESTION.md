@@ -88,7 +88,7 @@ The fix accepts **both** forms, because the documentation does not settle whethe
 - **`AllyReportReader`**: the two report shapes, told apart by their columns, each returning its rows plus missing columns, unknown columns and notes.
 - **`AllyReconciliation`** (Domain): the course and item joins, with summaries and notes.
 - **`AllyFixtures`** (tests): fictional exports built to the documented column list, including the byte-order mark Ally writes. No real institutional data.
-- **No migration, no persistence, no endpoint.** Deliberate — see below.
+- **No migration and no persistence.** Deliberate — see below. An endpoint and a screen were added on October 29, 2026 (amendment below); they still store nothing.
 
 ### Why slice 1 stops before storing anything
 
@@ -125,3 +125,29 @@ It is also the better sequence on its own merits. The format understanding is th
   - base names are taken only from a numeric suffix, so `Time: start` and `application/x-page` survive
   - the catalogue's 37 codes and 37 severities are asserted against an independently written list of what Anthology documents
 - **Still not verified against a real Ally export.** The column names, severities and report shapes now match Anthology's reference exactly, and the reader accepts both plausible readings of the issue headers. What remains unknown is whether a generated file differs from its own documentation — which is precisely what the reader's notes are for. The first real export should be read with those notes in hand before slice 2 is designed.
+
+
+## Amendment: a screen for checking a real export — October 29, 2026
+
+Slice 1 could answer every question except the one that matters most: does a real Ally export match the documentation this reader was built from? That question cannot be answered by anyone without an Ally licence, so it needed to be answerable by the person who has one.
+
+`POST /ally/report-check` (CTL only) streams an upload to a temporary file the OS deletes on close, parses it, and returns what the reader understood. `AllyReportCheck.tsx` presents it under Standards, where the college's own checks are configured.
+
+**It stores nothing** — no scores, no findings, no copy of the file — and says so above the upload control, because a screen that accepts an institutional report must not leave any doubt about what happens to it. An integration test asserts it: element and snapshot counts are unchanged across an upload.
+
+What it reports: which of the two reports it is, rows read, **how many of the 37 documented issue columns it recognised**, columns it does not know, expected columns the file lacks, per-issue counts split into what Ally adds versus what TeachWell already checks, any severity that disagrees with the catalogue, and — for a Courses file — how many Canvas course ids match imported courses.
+
+The recognised-versus-known count is the headline, because it is the direct answer to "does this reader understand your file".
+
+### Found while building it
+
+- **A 500 that should have been a 400.** An empty or malformed multipart body made `MultipartReader` throw with nothing catching it. Now reported as the client error it is.
+- **The recognised count was meaningless.** It was derived from `MissingColumns`, which only ever held *expected field* columns and never issue codes. `AllyReport` now returns `MissingIssueColumns` separately, because "a field the reader wanted" and "a whole Ally rule this file cannot report on" are different facts and were being conflated in prose.
+
+### The public demo
+
+The demo takes no uploads (`PublicDemoOptions.Disabled`), so the panel is hidden when `Features__PublicDemo` is on rather than rendering a control that refuses every file.
+
+### Verification
+
+`AllyCheckTests`, 4 integration tests: a Courses report read end to end with its scores, issue provenance and course matching, asserting **nothing was written**; a Courses file told apart from one course's own report; a file with deliberately wrong columns still read and reporting what it could not find; and CTL-only access with instructors and the academic administrator refused, plus wrong extension, non-Ally, empty and malformed uploads.

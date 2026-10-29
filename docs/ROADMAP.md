@@ -177,13 +177,13 @@ Two enabling slices came out of building item 1, both blocking work first estima
 
 | Item | State |
 | --- | --- |
-| 1. WCAG mapping and conformance report | Backend built and tested (ADR 018); report screen not yet built |
+| 1. WCAG mapping and conformance report | Built and tested, screen included (ADR 018 and its amendments) |
 | 5. Scaffolding order check | Built and tested (ADR 018) |
 | 5a. Media evidence capture | Built and tested (ADR 018 amendment) |
 | 5. Captions checks | Built and tested; closes the captions gap without Ally |
 | 6. Oversight trend | Already existed; item withdrawn |
 | College-wide WCAG rollup | Built and tested (ADR 018 amendment) |
-| 2. Ally ingestion — reader, catalogue and join | Built and tested; catalogue verified against Anthology's reference (ADR 020 slice 1) |
+| 2. Ally ingestion — reader, catalogue, join and a format-check screen | Built and tested; catalogue verified against Anthology's reference (ADR 020 slice 1 and its amendments) |
 | 2. Ally ingestion — storage and surfacing | Slice 2: needs a real export to validate the columns, and a database for the migration |
 | 3. Fix-once worklists | Blocked on 2's slice 2 (`LibraryReference`) |
 | 4a. Syllabus import (API and export) | Built and tested (ADR 019) |
@@ -201,12 +201,15 @@ It also exposed a defect in the media checks — an LTI launch was being asked a
 
 **Resolved, and built.** The owner chose the paste route, keeping the Canvas import for colleges that use the Canvas syllabus page. The course owner now pastes the syllabus text (`PUT /courses/{id}/syllabus`); it is sanitized and checked exactly like imported content, it outranks the importer so a re-import cannot overwrite or remove it, and a course with no syllabus at all gets a stated limitation rather than silence. A direct Simple Syllabus API integration stays with the Phase 12 campus integrations, where ADR 008 placed it, because it needs institutional approval. See the ADR 019 amendment.
 
-### Not verified anywhere in this work
+### Verification, as of October 29, 2026
 
-Two gaps, both environmental:
+The two environmental gaps recorded here are closed. Node 22 and PostgreSQL 17 are installed under `.local` as `docs/LOCAL_DEVELOPMENT.md` describes.
 
-- **The SPA.** Node is not installed on the machine these slices were built on and `src/TeachWell.Web/node_modules` is absent, so `tsc --noEmit` and the Playwright specs have not run. Two changes are affected: the WCAG criterion line on a guide step (additive, and its API shape is asserted by tests), and `SyllabusPaste.tsx` with its mount on the course page. The second is a new component and is the part of this work most likely to need correction.
-- **The `SuppliedContent` migration.** PostgreSQL is not installed here, and the SQLite suite uses `EnsureCreated`, so it never exercises migrations. The migration is two additive nullable columns and the model snapshot is consistent, but it needs a PostgreSQL run before deployment.
+- **The SPA.** `tsc --noEmit` and the production build are clean, and the Playwright suite passes 25 of 25, including `e2e/syllabus.spec.ts` for the syllabus panel, the WCAG criterion on a guide step and the oversight rollup.
+- **The `SuppliedContent` migration** has been applied to a real PostgreSQL 17.7 database, and both columns verified by type and nullability. The full suite passed against native PostgreSQL.
+- **Ally's real export format** remains the one open assumption. The catalogue matches Anthology's reference column by column, and there is now a CTL screen for checking a real export against the reader (ADR 020 amendment), so this is answerable by anyone with an Ally licence.
+
+What the browser suite caught that nothing else did is worth recording, because all of it was in new UI that type-checked and passed every unit test: a render that could blank the course page, a table that broke phone width, a server computation run twice per page view, and three bugs in the specs themselves.
 - **Ally's actual export format.** ADR 020's catalogue was checked column by column against [Anthology's Canvas export reference](https://help.anthology.com/ally-lms/en/administrators/ally-institution-report/institution-report-export/ally-institutional-report-exports-for-instructure-canvas.html) and matches it, which caught one real defect: the issue columns carry their severity in the header (`AlternativeText:2`), so the reader found none of them. Fixed, and both forms are now accepted. What is still unverified is whether a generated file differs from its own documentation, which is what the reader's notes exist to surface.
 
 The backend is otherwise covered by 292 passing tests.

@@ -40,9 +40,23 @@ export function SyllabusPaste({
     if (e instanceof ApiError && e.status === 401) onSessionExpired(e);
     else setError((e as Error).message);
   }
+  // A panel must not be able to take the course page down with it. An unexpected response body — a proxy error page,
+  // an older API, a route that answered with something else entirely — would otherwise reach the render and throw on
+  // the first missing field, and React unmounts the whole subtree when a render throws. So the shape is checked once
+  // here and anything else is treated as "no syllabus to show" rather than trusted.
+  function isSyllabus(value: unknown): value is Syllabus {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+    const v = value as Partial<Syllabus>;
+    return (
+      (v.source === "Canvas" || v.source === "Pasted" || v.source === "None") &&
+      typeof v.words === "number" &&
+      typeof v.canEdit === "boolean"
+    );
+  }
   async function load() {
     try {
-      setSyllabus(await request<Syllabus>(`/courses/${courseId}/syllabus`));
+      const loaded = await request<unknown>(`/courses/${courseId}/syllabus`);
+      setSyllabus(isSyllabus(loaded) ? loaded : null);
     } catch (e) {
       fail(e);
     }
@@ -56,7 +70,9 @@ export function SyllabusPaste({
     setBusy(true);
     setError("");
     try {
-      setSyllabus(await request<Syllabus>(`/courses/${courseId}/syllabus`, { text }, "PUT"));
+      const saved = await request<unknown>(`/courses/${courseId}/syllabus`, { text }, "PUT");
+      if (isSyllabus(saved)) setSyllabus(saved);
+      else await load();
       setEditing(false);
       setText("");
       onSaved?.();
@@ -70,7 +86,9 @@ export function SyllabusPaste({
     setBusy(true);
     setError("");
     try {
-      setSyllabus(await request<Syllabus>(`/courses/${courseId}/syllabus`, undefined, "DELETE"));
+      const cleared = await request<unknown>(`/courses/${courseId}/syllabus`, undefined, "DELETE");
+      if (isSyllabus(cleared)) setSyllabus(cleared);
+      else await load();
       onSaved?.();
     } catch (e) {
       fail(e);
@@ -140,22 +158,37 @@ export function SyllabusPaste({
           </div>
         </>
       ) : (
-        <div className="finding-actions">
-          <button
-            type="button"
-            onClick={() => {
-              setText(syllabus.text ?? "");
-              setEditing(true);
-            }}
-          >
-            {syllabus.source === "Pasted" ? "Edit pasted syllabus" : "Paste syllabus text"}
-          </button>
-          {syllabus.source === "Pasted" && (
-            <button type="button" className="secondary" disabled={busy} onClick={clear}>
-              Remove
-            </button>
+        <>
+          {/* Reading what is stored must not require entering the editor. Owner-only, because the API returns the
+              text only to the owner; a reviewer sees the panel's state and reads the syllabus itself under Course
+              content, where it now carries the same allowlisted preview as a page. */}
+          {syllabus.text && (
+            <details className="syllabus-preview">
+              <summary>Show syllabus</summary>
+              <div className="syllabus-text">
+                {syllabus.text.split("\n").map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+            </details>
           )}
-        </div>
+          <div className="finding-actions">
+            <button
+              type="button"
+              onClick={() => {
+                setText(syllabus.text ?? "");
+                setEditing(true);
+              }}
+            >
+              {syllabus.source === "Pasted" ? "Edit pasted syllabus" : "Paste syllabus text"}
+            </button>
+            {syllabus.source === "Pasted" && (
+              <button type="button" className="secondary" disabled={busy} onClick={clear}>
+                Remove
+              </button>
+            )}
+          </div>
+        </>
       )}
     </section>
   );

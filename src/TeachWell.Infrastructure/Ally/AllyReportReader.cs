@@ -20,8 +20,11 @@ public sealed record AllyItemRow(string Id, string? Name, string? MimeType, deci
     string? LibraryReference, DateTime? DeletedAt, IReadOnlyDictionary<string, int> Issues);
 
 // What was read, and everything about the file that the caller should know before acting on it.
+// MissingColumns are expected fields the file does not have; MissingIssueColumns are catalogued issue columns it does
+// not have. The two are kept apart because they mean different things: the first is a field the reader wanted, the
+// second is a whole Ally rule this file cannot report on.
 public sealed record AllyReport<T>(IReadOnlyList<T> Rows, IReadOnlyList<string> MissingColumns, IReadOnlyList<string> UnknownIssueColumns,
-    IReadOnlyList<string> Notes);
+    IReadOnlyList<string> Notes, IReadOnlyList<string> MissingIssueColumns);
 
 public static class AllyReportReader
 {
@@ -144,6 +147,6 @@ public static class AllyReportReader
         if (disagreements.Count > 0)
             notes.Add($"{disagreements.Count} issue column(s) state a different severity than TeachWell's catalogue records: {string.Join(", ", disagreements.Take(8))}{(disagreements.Count > 8 ? ", …" : "")}. The file's severity is the authority; TeachWell's catalogue needs updating.");
 
-        return new AllyReport<T>(rows, missing, unknown, notes);
+        return new AllyReport<T>(rows, missing, unknown, notes, missingIssues);
     }
 }

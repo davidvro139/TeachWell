@@ -149,7 +149,8 @@
 .course-sections > span {
   color: #6f7d73;
 }
-.guide-reference {
+.guide-reference,
+.guide-criteria {
   font-size: 12px;
   color: #6f7d73;
   margin-top: -4px;
@@ -162,4 +163,56 @@
 }
 .export-help {
   margin: 0 0 22px;
+}
+
+/* The read-only syllabus in its panel (ADR 019): reading what is stored must not require the editor. */
+.syllabus-preview {
+  margin: 0 0 10px;
+  border: 1px solid #dfe5e2;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.syllabus-preview > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #2f6f5b;
+}
+.syllabus-text {
+  margin-top: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.syllabus-text p {
+  margin: 0 0 6px;
+}
+
+/* The conformance report's header figures (ADR 018). */
+.conformance-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px 18px;
+  margin: 10px 0 14px;
+}
+.conformance-summary dt {
+  font-size: 12px;
+  color: #6f7d73;
+}
+.conformance-summary dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+.conformance-meaning {
+  display: block;
+  margin-top: 4px;
+  color: #6f7d73;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Any wide table wrapper scrolls on its own. Guide.css scopes this to .guide-feedback; the conformance report and
+   the oversight rollup use the same wrapper elsewhere, and without this they widen the page at phone width. */
+.table-scroll {
+  overflow-x: auto;
 }

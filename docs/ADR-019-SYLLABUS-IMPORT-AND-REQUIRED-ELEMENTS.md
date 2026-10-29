@@ -170,3 +170,21 @@ The limitation appears only when the syllabus check is enabled, so a college tha
   - under the extended demo standards, WEB 101's missing accessibility statement becomes a guide step with one open place labelled "Syllabus: Syllabus", no module, and no WCAG criterion
 - **Three existing tests changed, all element counts.** `ApiTests` (6→8 elements and snapshots), `StandardSetTests` (2→3 elements checked in the preview) and `CourseReviewTests` (3→4 `ElementCount`). Each is a correct consequence of every demo course now having a syllabus, not a regression; each now carries a comment saying why the number is what it is.
 - **Not verified: the SPA.** Node is still not installed on this machine, so `tsc --noEmit` and the Playwright specs have not run. This slice changes no SPA code, but a syllabus now appears in guide steps and course element lists, so those screens should be looked at before the work is called finished.
+
+
+## Amendment: reading the syllabus without editing it — October 29, 2026
+
+The project owner pointed out that once a syllabus is pasted there was no way to *see* it: the panel offered "Edit pasted syllabus", so reading what was stored meant opening the editor. That was wrong, and it hid a second gap.
+
+- **A collapsed "Show syllabus"** in the panel renders the stored text read-only. Owner only, because the API returns the text only to the owner.
+- **`CONTENT_TYPES` in `CourseContent.tsx` excluded `syllabus`**, so under Course content the syllabus showed as plain text while pages got the formatted preview. It carries the same allowlisted preview as any page, whether imported or pasted, and the previews endpoint never filtered by type — this was a client-side omission alone.
+
+### Verification
+
+`e2e/syllabus.spec.ts` drives the panel end to end on DES 120: where the syllabus came from and its word count, paste, cancel leaving it untouched, a whitespace-only paste disabling Save, save with attribution, re-opening the editor showing the stored text, **surviving a return to the course** (a fresh load and fetch), removal, and pasting again.
+
+It runs on DES 120 rather than WEB 101 because twelve specs assert against WEB 101's guide and readiness and this suite shares one database sequentially. Two bugs in the spec itself were caught doing this, both worth recording as traps:
+
+- A locator matching both the status line and the note, since each mentions where the syllabus came from.
+- An assertion on a step `reports.spec.ts` removes: it sorts earlier and maps a competency on WEB 101. The missing-rubric step is used instead.
+- A `page.reload()` that landed on the course list, because **this SPA keeps its view in React state, not the URL**. Navigating in again is the stronger check anyway.

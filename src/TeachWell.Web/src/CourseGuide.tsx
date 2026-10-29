@@ -467,9 +467,11 @@ function StepView({
               Based on: <Glossed text={why.reference} />
             </p>
           )}
-          {/* Only accessibility checks carry criteria (ADR 018); Glossed links WCAG to its plain-language entry. */}
+          {/* Only accessibility checks carry criteria (ADR 018); Glossed links WCAG to its plain-language entry.
+              Its own class, not guide-reference: that one is the standards reference inside the guidance text
+              (ADR 016), and sharing a class made ".guide-reference" ambiguous for anything selecting it. */}
           {step.wcagCriteria.length > 0 && (
-            <p className="guide-reference">
+            <p className="guide-criteria">
               Relates to: <Glossed text={step.wcagCriteria.map((c) => c.reference).join("; ")} />
             </p>
           )}

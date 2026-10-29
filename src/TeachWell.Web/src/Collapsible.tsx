@@ -23,6 +23,7 @@ export function Collapsible({
   defaultOpen = true,
   className = "sharing-panel",
   busy,
+  onOpen,
   children,
 }: {
   id: string;
@@ -34,6 +35,12 @@ export function Collapsible({
   defaultOpen?: boolean;
   className?: string;
   busy?: boolean;
+  /**
+   * Called whenever the section is open, including on mount when it was remembered open. Lets a section whose
+   * contents are expensive to produce fetch them only once someone actually looks (it may fire more than once, so
+   * the caller guards against repeating the work).
+   */
+  onOpen?: () => void;
   children: ReactNode;
 }) {
   const key = "teachwell.section." + id;
@@ -52,6 +59,12 @@ export function Collapsible({
     window.addEventListener(OPEN_EVENT, listener);
     return () => window.removeEventListener(OPEN_EVENT, listener);
   }, [id]);
+  useEffect(() => {
+    if (open) onOpen?.();
+    // onOpen is intentionally not a dependency: callers pass an inline closure, and this should follow the section's
+    // open state rather than re-firing on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   function toggle() {
     setOpen((current) => {
       try {

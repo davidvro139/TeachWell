@@ -177,6 +177,11 @@ See ADR 011.
   - Not applicable has no reason, or a reason is over 500 characters
   - a key is not currently shown by the guide
 - Each guide step also has `resources`: linked published articles (kind, id, title, slug) and upcoming workshops (kind, id, title, start, end, modality, `myStatus`), and `wcagCriteria`: the success criteria the step's check relates to (number, name, level, reference), empty for checks that relate to none.
+## Ally report check (ADR 020)
+- `POST /ally/report-check` (CTL role; others 403) takes one multipart form file named `file`, a `.csv` from Ally's institution report export. It parses the file and **stores nothing**: no scores, no findings and no copy of the file. Rate-limited, refused on the public demo, and capped at 40 MB.
+- Returns the report `kind` (`Courses` or `Items`), `fileName`, `rows`, `issueColumnsRecognised` of `issueColumnsKnown`, `missingColumns`, `unknownColumns`, `notes`, per-issue `issues` (code, description, severity, whether TeachWell already checks it and which check), and for a Courses file a `courses` reconciliation summary plus `unmatchedCourseIds`.
+- 400 for a non-CSV name, a file that is not an Ally report, an empty or malformed upload, or more than one file; 413 above the size limit.
+
 ## Syllabus (ADR 019)
 - `GET /courses/{id}/syllabus` (course access; others 404). Returns `source` (`Canvas`, `Pasted` or `None`), the `words` the checks measured, `suppliedAt`/`suppliedByName` for a paste, `importedAt` for a Canvas one, `canEdit` (owner only), a plain-language `note`, and `text` **only for the owner**.
 - `PUT /courses/{id}/syllabus {text}` (owner only; others 404). Stores the pasted syllabus, which the syllabus checks then run against. Plain text and pasted HTML are both accepted and go through the same sanitizer as an import. 400 when the text is empty, holds no words, or exceeds 100,000 characters.

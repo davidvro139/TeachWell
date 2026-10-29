@@ -10,7 +10,9 @@ const countWords = (text: string) => (text.match(/[\p{L}\p{N}]+/gu) ?? []).lengt
 const plural = (n: number, one: string, many = one + "s") => `${n.toLocaleString()} ${n === 1 ? one : many}`;
 const VIEW_KEY = "teachwell.contentView";
 const BATCH = 100;
-const CONTENT_TYPES = new Set(["page", "assignment", "quiz", "discussion"]);
+// Types whose stored preview is worth fetching. The syllabus is included (ADR 019): it carries the same
+// allowlisted preview as a page, whether it came from Canvas or was pasted by the owner.
+const CONTENT_TYPES = new Set(["page", "assignment", "quiz", "discussion", "syllabus"]);
 
 // Server-generated, allowlisted markup (CanvasText.Preview): structural tags, encoded text and a fixed set of formatting classes; no
 // scripts, inline styles, URLs or images. Long items are clipped until expanded.
