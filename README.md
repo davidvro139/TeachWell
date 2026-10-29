@@ -26,8 +26,10 @@ TeachWell models the day-to-day work of a CTL instructional designer supporting 
 | **Consistent, evidence-based reviews** | Rubric reviews are pinned to a snapshot of exactly what was reviewed and to the rubric version used. A later edit never rewrites an earlier assessment, and each automated finding is confirmed or rejected by a person. |
 | **Faculty technical support** | A support desk with a triage queue for the whole CTL. Instructors can ask for help directly from any improvement step or revision task. |
 | **Job aids, trainings and workshops** | A knowledge base for job aids, and workshop scheduling with capacity and waitlists. Both are linked from the improvement steps and the glossary, where faculty need them. |
+| **Syllabus required elements** | The syllabus is checked for the elements the college requires — an accessibility statement, how to reach the instructor, grading, late work and academic integrity — each a keyword list the CTL edits, so a college that does not require one empties its list. Where syllabi live outside Canvas, as in Simple Syllabus, the instructor pastes the text and it is checked the same way; a pasted syllabus survives re-importing the course ([ADR 019](docs/ADR-019-SYLLABUS-IMPORT-AND-REQUIRED-ELEMENTS.md)). |
 | **Plain language for faculty** | A glossary explains terms such as WCAG, UDL, Bloom's taxonomy and cognitive load wherever they appear, with links to free reading and the CTL's own resources. |
-| **Course and program quality, ready for accreditation reporting** | Readiness reviews end in dated, permanent CTL endorsements, with re-checks when a course changes substantially. A read-only oversight view shows readiness, common issues and progress by department and program, with CSV export. Figures describe courses, never rank people, and every figure states its scope and date. |
+| **Course and program quality, ready for accreditation reporting** | Readiness reviews end in dated, permanent CTL endorsements, with re-checks when a course changes substantially. A read-only oversight view shows readiness, common issues and progress by department and program, with CSV export, and rolls open accessibility work up to the WCAG 2.1 success criteria the checks relate to. Each course also has a conformance report: the improvement guide grouped by criterion, with both dates and its own scope stated. Figures describe courses, never rank people, and nothing is presented as a conformance claim — an automated check can show that an issue was found, never that a criterion is satisfied. |
+| **Works alongside Anthology Ally** | Most colleges already run Ally, whose unit of work is a file. TeachWell's is a course under review by a person, and it does not open course files at all. Rather than reimplement Ally's checks, TeachWell reads its institution report export: the file layer (scanned and untagged PDFs, document language), contrast, broken links and flashing images. Where both tools find the same issue, TeachWell's own finding wins, so one problem never becomes two tasks. A CTL screen checks a real export against TeachWell's reader before anything is stored ([ADR 020](docs/ADR-020-ALLY-REPORT-INGESTION.md)). |
 | **Student privacy (FERPA)** | TeachWell reads course content only. It never needs student records, grades or submissions. |
 
 The automated checks support a reviewer's judgment; they are not a compliance or accessibility certification.
@@ -45,9 +47,9 @@ The automated checks support a reviewer's judgment; they are not a compliance or
 
 ## Who uses it
 
-- **Instructors:** a *Start here* checklist, the improvement guide, competency mapping, revision tasks, and help from the CTL.
-- **CTL reviewers:** versioned rubrics and standard sets, page-level and whole-course reviews, a readiness queue with endorsements, support ticket triage, a knowledge base and workshops.
-- **Academic administrators:** a read-only, college-wide view of course quality and readiness. It never opens course content.
+- **Instructors:** a *Start here* checklist, the improvement guide with the WCAG criterion behind each accessibility step, the syllabus and its required elements, competency mapping, revision tasks, and help from the CTL.
+- **CTL reviewers:** versioned rubrics and standard sets, page-level and whole-course reviews, a readiness queue with endorsements, per-course conformance reports, a format check for Ally's report export, support ticket triage, a knowledge base and workshops.
+- **Academic administrators:** a read-only, college-wide view of course quality and readiness, including open accessibility work by WCAG criterion. It never opens course content.
 - **System administrators:** audited role management and a filterable audit trail.
 
 See the **[demo guide](docs/DEMO_GUIDE.md)** for the full feature reference and step-by-step walkthroughs.
@@ -65,8 +67,8 @@ See the **[demo guide](docs/DEMO_GUIDE.md)** for the full feature reference and 
 - **Secrets kept out of reach.** Canvas personal access tokens are encrypted with AES-256-GCM, never returned after saving, and redacted from logs and audit records. There are no default passwords.
 - **Audit trail** for permission changes, sharing, reviews, revisions, readiness decisions and integration changes.
 - **Tests.**
-  - More than 200 xUnit unit and integration tests, run against SQLite and against real PostgreSQL.
-  - 20 Playwright specs in Microsoft Edge, each run against an isolated, throwaway database.
+  - More than 290 xUnit unit and integration tests, run against SQLite and against real PostgreSQL 17.
+  - 25 Playwright tests across 21 specs in Microsoft Edge, each run against an isolated, throwaway database.
   - Coverage includes permission denials, invalid input, CSRF and malicious HTML.
 - **A hosted demo that never makes visitors wait.** The sample data is rebuilt daily in a separate PostgreSQL schema, then swapped in with one transaction. Visitors never wait for a reset, even though the free instance sleeps when idle ([ADR 017](docs/ADR-017-HOSTED-PUBLIC-DEMO.md)).
 - **Documented decisions.** 20 ADRs under [docs/](docs/) record every non-obvious choice, with its trade-offs and limitations.
